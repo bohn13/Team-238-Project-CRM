@@ -1,0 +1,61 @@
+# ================================
+# PYTHON
+# ================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ================================
+# VIRTUAL ENVIRONMENTS
+# ================================
+.venv/
+venv/
+env/
+ENV/
+
+# ================================
+# BUILD & DISTRIBUTION
+# ================================
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# ================================
+# RUFF & LINTING
+# ================================
+.ruff_cache/
+.mypy_cache/
+
+# ================================
+# TESTING & COVERAGE
+# ================================
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# ================================
+# ALEMBIC
+# ================================
+alembic/versions/__pycache__/
+
+# ================================
+# CELERY
+# ================================
+celerybeat-schedule
+celerybeat.pid
+*.pid
+
+# ================================
+# DATABASE
+# ================================
+*.sql.bak
+*.dump
+pg_data/

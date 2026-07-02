@@ -1,0 +1,53 @@
+# ================================
+# ENVIRONMENT & SECRETS
+# ================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# ================================
+# OS
+# ================================
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ================================
+# EDITORS
+# ================================
+
+# VSCode
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# JetBrains
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+
+# ================================
+# MISC
+# ================================
+*.tmp
+*.bak
+.cache/
+tmp/
+logs/
+*.log

@@ -1,0 +1,42 @@
+# ================================
+# DOCKER
+# ================================
+docker-compose.override.yml
+
+# ================================
+# KUBERNETES / K8s / K3s
+# ================================
+
+# NEVER COMMIT
+kubeconfig
+*.kubeconfig
+.kube/
+
+# ONLY SEALED SECRETS
+*-plain-secret.yaml
+*-plain-secret.yml
+*.secret.yaml.dec
+*.secret.yml.dec
+
+# ================================
+# TERRAFORM
+# ================================
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+
+# ================================
+# PROMETHEUS / GRAFANA
+# ================================
+grafana/data/
+prometheus/data/
+
+# ================================
+# CERTIFICATES
+# ================================
+certs/
+*.crt
+*.csr
