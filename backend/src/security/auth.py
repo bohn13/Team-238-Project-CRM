@@ -30,11 +30,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload."
         )
 
-    user = await UserRepository(db).get_active_with_group(user_id)
+    user = await UserRepository(db).get_current_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or not active.",
+            detail="User not found.",
         )
     return user
 

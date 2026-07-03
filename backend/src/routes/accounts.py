@@ -10,6 +10,7 @@ from database import AsyncSessionDep
 from exceptions import BaseSecurityError
 from notifications import EmailSenderInterface
 from schemas import (
+    CurrentUserResponseSchema,
     MessageResponseSchema,
     PasswordResetCompleteRequestSchema,
     PasswordResetRequestSchema,
@@ -23,7 +24,8 @@ from schemas import (
     UserRoleUpdateRequestSchema,
 )
 from security.interfaces import JWTAuthManagerInterface
-from security.permissions import SuperAdminDep, AdminDep
+from security.auth import CurrentUserDep
+from security.permissions import AdminDep
 from services.auth import AuthService
 from exceptions import AuthServiceError
 
@@ -65,7 +67,12 @@ async def register_user(
 ) -> UserRegistrationResponseSchema:
     try:
         user = await auth_service.register_user(
-            email=str(user_data.email), password=user_data.password
+            email=str(user_data.email),
+            password=user_data.password,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            phone_number=user_data.phone_number,
+            source=user_data.source,
         )
     except AuthServiceError as error:
         raise map_auth_error(error) from error
@@ -186,7 +193,17 @@ async def update_user_role(
     auth_service: AuthService = AuthServiceDep,
 ) -> MessageResponseSchema:
     try:
-        message = await auth_service.update_user_role(user_id=user_id, group=data.group)
+        message = await auth_service.update_user_role(user_id=user_id, role=data.role)
     except AuthServiceError as error:
         raise map_auth_error(error) from error
     return MessageResponseSchema(message=message)
+
+
+@router.get(
+    "/users/me",
+    response_model=CurrentUserResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Get current user",
+)
+async def get_current_user_profile(user: CurrentUserDep) -> CurrentUserResponseSchema:
+    return CurrentUserResponseSchema.model_validate(user)

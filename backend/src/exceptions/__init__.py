@@ -7,16 +7,12 @@ from exceptions.auth import (
     LastAdminDemotionError,
     UserAlreadyExistsError,
     ActiveActivationTokenError,
-    DefaultUserGroupNotFoundError,
     InvalidActivationTokenError,
-    UserAlreadyActiveError,
     InvalidPasswordResetTokenError,
     InvalidCredentialsError,
-    InactiveUserError,
     RefreshTokenNotFoundError,
     UserNotFoundError,
-    RoleNotFoundError,
-    SettingSuperAdminRoleError
+    SettingSuperAdminRoleError,
 )
 
 __all__ = [
@@ -32,14 +28,10 @@ __all__ = [
     "LastAdminDemotionError",
     "UserAlreadyExistsError",
     "ActiveActivationTokenError",
-    "DefaultUserGroupNotFoundError",
     "InvalidActivationTokenError",
-    "UserAlreadyActiveError",
     "InvalidPasswordResetTokenError",
     "InvalidCredentialsError",
-    "InactiveUserError",
     "RefreshTokenNotFoundError",
     "UserNotFoundError",
-    "RoleNotFoundError",
     "SettingSuperAdminRoleError",
 ]

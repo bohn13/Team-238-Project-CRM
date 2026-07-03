@@ -1,4 +1,5 @@
 from schemas.users import (
+    CurrentUserResponseSchema,
     MessageResponseSchema,
     PasswordResetCompleteRequestSchema,
     PasswordResetRequestSchema,
@@ -13,6 +14,7 @@ from schemas.users import (
 )
 
 __all__ = [
+    "CurrentUserResponseSchema",
     "MessageResponseSchema",
     "PasswordResetCompleteRequestSchema",
     "PasswordResetRequestSchema",

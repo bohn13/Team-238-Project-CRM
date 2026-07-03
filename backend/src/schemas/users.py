@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from database import users_validators
-from database.models.users import UserGroupEnum
+from database.models.users import UserRoleEnum
 
 
 class BaseEmailPasswordSchema(BaseModel):
@@ -11,6 +13,8 @@ class BaseEmailPasswordSchema(BaseModel):
             "example": {
                 "email": "doctor@example.com",
                 "password": "StrongPassword123!",
+                "first_name": "Andrii",
+                "last_name": "Yarotskyi",
             }
         },
     )
@@ -30,7 +34,10 @@ class BaseEmailPasswordSchema(BaseModel):
 
 
 class UserRegistrationRequestSchema(BaseEmailPasswordSchema):
-    pass
+    first_name: str = Field(..., min_length=1, max_length=50)
+    last_name: str = Field(..., min_length=1, max_length=50)
+    phone_number: str | None = Field(default=None, max_length=20)
+    source: str | None = Field(default="website", max_length=30)
 
 
 class UserRegistrationResponseSchema(BaseModel):
@@ -83,7 +90,20 @@ class TokenRefreshResponseSchema(BaseModel):
 
 
 class UserRoleUpdateRequestSchema(BaseModel):
-    group: UserGroupEnum = Field(..., description="Target user role.")
+    role: UserRoleEnum = Field(..., description="Target user role.")
+
+
+class CurrentUserResponseSchema(BaseModel):
+    id: int
+    role: UserRoleEnum
+    first_name: str
+    last_name: str
+    phone_number: str | None = None
+    email: EmailStr | None = None
+    registration_date: datetime
+    source: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MessageResponseSchema(BaseModel):

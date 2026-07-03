@@ -5,7 +5,7 @@ from getpass import getpass
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from database import UserGroupEnum, UserModel
+from database import UserModel, UserRoleEnum
 from database.session_postgresql import AsyncPostgresqlSessionLocal
 from repositories.users import UserRepository
 
@@ -24,30 +24,25 @@ async def create_initial_admin(email: str) -> None:
 
     async with AsyncPostgresqlSessionLocal() as session:
         users = UserRepository(session)
-        admin_group = await users.get_group_by_name(UserGroupEnum.SUPERADMIN)
-        if not admin_group:
-            raise RuntimeError(
-                "Superadmin group is missing. Run database migrations to seed user groups."
-            )
-
-        existing_admins = await users.count_users_in_group(admin_group.id)
-        if existing_admins:
+        existing_superadmins = await users.count_users_with_role(UserRoleEnum.SUPERADMIN)
+        if existing_superadmins:
             raise RuntimeError(
                 "Superadmin already exists. Use superadmin role-change endpoint instead."
             )
 
         existing_user = await users.get_by_email(normalized_email)
         if existing_user:
-            existing_user.group_id = admin_group.id
-            existing_user.is_active = True
+            existing_user.role = UserRoleEnum.SUPERADMIN
             existing_user.password = password
         else:
             superadmin = UserModel.create(
                 email=normalized_email,
                 raw_password=password,
-                group_id=admin_group.id,
+                first_name="Initial",
+                last_name="Superadmin",
+                role=UserRoleEnum.SUPERADMIN,
+                source="admin_created",
             )
-            superadmin.is_active = True
             users.add_user(superadmin)
 
         await session.commit()

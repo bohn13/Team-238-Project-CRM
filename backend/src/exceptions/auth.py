@@ -23,19 +23,9 @@ class ActiveActivationTokenError(AuthServiceError):
         )
 
 
-class DefaultUserGroupNotFoundError(AuthServiceError):
-    status_code = 500
-    detail = "Default user group not found."
-
-
 class InvalidActivationTokenError(AuthServiceError):
     status_code = 400
     detail = "Invalid or expired activation token."
-
-
-class UserAlreadyActiveError(AuthServiceError):
-    status_code = 400
-    detail = "User account is already active."
 
 
 class InvalidPasswordResetTokenError(AuthServiceError):
@@ -48,11 +38,6 @@ class InvalidCredentialsError(AuthServiceError):
     detail = "Invalid email or password."
 
 
-class InactiveUserError(AuthServiceError):
-    status_code = 403
-    detail = "User account is not activated."
-
-
 class RefreshTokenNotFoundError(AuthServiceError):
     status_code = 401
     detail = "Refresh token not found."
@@ -61,11 +46,6 @@ class RefreshTokenNotFoundError(AuthServiceError):
 class UserNotFoundError(AuthServiceError):
     status_code = 404
     detail = "User not found."
-
-
-class RoleNotFoundError(AuthServiceError):
-    status_code = 400
-    detail = "Requested role does not exist."
 
 
 class LastAdminDemotionError(AuthServiceError):

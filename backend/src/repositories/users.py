@@ -8,9 +8,8 @@ from database import (
     ActivationTokenModel,
     PasswordResetTokenModel,
     RefreshTokenModel,
-    UserGroupEnum,
-    UserGroupModel,
     UserModel,
+    UserRoleEnum,
 )
 
 
@@ -45,28 +44,14 @@ class UserRepository:
             select(UserModel).where(UserModel.id == user_id)
         )
 
-    async def get_active_with_group(self, user_id: int) -> UserModel | None:
+    async def get_current_by_id(self, user_id: int) -> UserModel | None:
         return await self.session.scalar(
-            select(UserModel)
-            .options(joinedload(UserModel.group))
-            .where(UserModel.id == user_id, UserModel.is_active.is_(True))
+            select(UserModel).where(UserModel.id == user_id)
         )
 
-    async def get_group_by_name(
-        self, group_name: UserGroupEnum
-    ) -> UserGroupModel | None:
-        return await self.session.scalar(
-            select(UserGroupModel).where(UserGroupModel.name == group_name)
-        )
-
-    async def get_group_by_id(self, group_id: int) -> UserGroupModel | None:
-        return await self.session.scalar(
-            select(UserGroupModel).where(UserGroupModel.id == group_id)
-        )
-
-    async def count_users_in_group(self, group_id: int) -> int:
+    async def count_users_with_role(self, role: UserRoleEnum) -> int:
         result = await self.session.scalar(
-            select(func.count(UserModel.id)).where(UserModel.group_id == group_id)
+            select(func.count(UserModel.id)).where(UserModel.role == role)
         )
         return int(result or 0)
 

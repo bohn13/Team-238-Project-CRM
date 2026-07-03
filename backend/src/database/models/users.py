@@ -4,9 +4,7 @@ import enum
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import (
-    Boolean,
     DateTime,
-    Enum,
     ForeignKey,
     Integer,
     String,
@@ -16,44 +14,33 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from database.models.base import Base
-from database.session_postgresql import str_uniq
 from database.validators import users as validators
 from security.passwords import hash_password, verify_password
 from security.utils import generate_secure_token
 
 
-class UserGroupEnum(str, enum.Enum):
+class UserRoleEnum(str, enum.Enum):
     SUPERADMIN = "superadmin"
     ADMIN = "admin"
     DOCTOR = "doctor"
+    MANAGER = "manager"
     PATIENT = "patient"
-
-
-class UserGroupModel(Base):
-    __tablename__ = "user_groups"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[UserGroupEnum] = mapped_column(Enum(UserGroupEnum), unique=True)
-
-    users: Mapped[list[UserModel]] = relationship(back_populates="group")
 
 
 class UserModel(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str_uniq]
-    _hashed_password: Mapped[str] = mapped_column("hashed_password", String(255))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(
+    role: Mapped[UserRoleEnum] = mapped_column(String(20), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    phone_number: Mapped[str | None] = mapped_column(String(20), unique=True)
+    email: Mapped[str | None] = mapped_column(String(50), unique=True)
+    _password_hash: Mapped[str | None] = mapped_column("password_hash", String(255))
+    registration_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    group_id: Mapped[int] = mapped_column(ForeignKey("user_groups.id"))
-    group: Mapped[UserGroupModel] = relationship(back_populates="users", lazy="joined")
+    source: Mapped[str | None] = mapped_column(String(30))
 
     activation_token: Mapped[ActivationTokenModel | None] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -66,8 +53,22 @@ class UserModel(Base):
     )
 
     @classmethod
-    def create(cls, email: str, raw_password: str, group_id: int) -> UserModel:
-        user = cls(email=email, group_id=group_id)
+    def create(
+        cls,
+        email: str,
+        raw_password: str,
+        first_name: str,
+        last_name: str,
+        role: UserRoleEnum = UserRoleEnum.DOCTOR,
+        source: str = "website",
+    ) -> UserModel:
+        user = cls(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            source=source,
+        )
         user.password = raw_password
         return user
 
@@ -78,13 +79,17 @@ class UserModel(Base):
     @password.setter
     def password(self, raw_password: str) -> None:
         validators.validate_password_strength(raw_password)
-        self._hashed_password = hash_password(raw_password)
+        self._password_hash = hash_password(raw_password)
 
     def verify_password(self, raw_password: str) -> bool:
-        return verify_password(raw_password, self._hashed_password)
+        if self._password_hash is None:
+            return False
+        return verify_password(raw_password, self._password_hash)
 
     @validates("email")
-    def validate_email(self, key: str, value: str) -> str:
+    def validate_email(self, key: str, value: str | None) -> str | None:
+        if value is None:
+            return value
         return validators.validate_email(value.lower())
 
 

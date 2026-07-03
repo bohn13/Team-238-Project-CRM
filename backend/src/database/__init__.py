@@ -3,9 +3,8 @@ from database.models.users import (
     ActivationTokenModel,
     PasswordResetTokenModel,
     RefreshTokenModel,
-    UserGroupEnum,
-    UserGroupModel,
     UserModel,
+    UserRoleEnum,
 )
 from database.session_postgresql import (
     AsyncSessionDep,
@@ -24,9 +23,8 @@ __all__ = [
     "PasswordResetTokenModel",
     "RefreshTokenModel",
     "SyncSessionLocal",
-    "UserGroupEnum",
-    "UserGroupModel",
     "UserModel",
+    "UserRoleEnum",
     "get_db",
     "int_pk",
     "str_null_true",

@@ -8,22 +8,17 @@ from database import (
     ActivationTokenModel,
     PasswordResetTokenModel,
     RefreshTokenModel,
-    UserGroupEnum,
     UserModel,
+    UserRoleEnum,
 )
 from exceptions import (
     UserAlreadyExistsError,
-    DefaultUserGroupNotFoundError,
-    ActiveActivationTokenError,
     DatabaseWriteError,
     InvalidActivationTokenError,
-    UserAlreadyActiveError,
     InvalidPasswordResetTokenError,
     InvalidCredentialsError,
-    InactiveUserError,
     RefreshTokenNotFoundError,
     UserNotFoundError,
-    RoleNotFoundError,
     LastAdminDemotionError,
     SettingSuperAdminRoleError,
 )
@@ -56,37 +51,35 @@ class AuthService:
         self.email_sender = email_sender
         self.users = UserRepository(session)
 
-    async def register_user(self, email: str, password: str) -> UserModel:
+    async def register_user(
+        self,
+        email: str,
+        password: str,
+        first_name: str,
+        last_name: str,
+        phone_number: str | None = None,
+        source: str | None = "website",
+    ) -> UserModel:
         user = await self.users.get_by_email_with_activation_token(email)
-        if user and user.is_active:
+        if user:
             raise UserAlreadyExistsError(email)
 
-        user_group = await self.users.get_group_by_name(UserGroupEnum.DOCTOR)
-        if not user_group:
-            raise DefaultUserGroupNotFoundError
-
         try:
-            if user is None:
-                user = UserModel.create(
-                    email=email,
-                    raw_password=password,
-                    group_id=user_group.id,
-                )
-                self.users.add_user(user)
-                await self.users.flush()
-            elif user.activation_token:
-                expires_at = as_aware_utc(user.activation_token.expires_at)
-                if utc_now() < expires_at:
-                    raise ActiveActivationTokenError(expires_at)
-                await self.users.delete_activation_token(user.activation_token)
-                await self.users.flush()
+            user = UserModel.create(
+                email=email,
+                raw_password=password,
+                first_name=first_name,
+                last_name=last_name,
+                source=source or "website",
+            )
+            user.phone_number = phone_number
+            self.users.add_user(user)
+            await self.users.flush()
 
             activation_token = ActivationTokenModel(user_id=user.id)
             self.users.add_activation_token(activation_token)
             await self.session.commit()
             await self.session.refresh(user)
-        except ActiveActivationTokenError:
-            raise
         except SQLAlchemyError as error:
             await self.session.rollback()
             raise DatabaseWriteError(
@@ -108,11 +101,6 @@ class AuthService:
                 await self.session.commit()
             raise InvalidActivationTokenError
 
-        user = token_record.user
-        if user.is_active:
-            raise UserAlreadyActiveError
-
-        user.is_active = True
         await self.users.delete_activation_token(token_record)
         await self.session.commit()
 
@@ -122,7 +110,7 @@ class AuthService:
 
     async def request_password_reset_token(self, email: str) -> str:
         user = await self.users.get_by_email(email)
-        if not user or not user.is_active:
+        if not user:
             return self.password_reset_message
 
         await self.users.delete_password_reset_tokens_for_user(user.id)
@@ -139,7 +127,7 @@ class AuthService:
 
     async def reset_password(self, email: str, token: str, password: str) -> str:
         user = await self.users.get_by_email(email)
-        if not user or not user.is_active:
+        if not user:
             raise InvalidPasswordResetTokenError
 
         token_record = await self.users.get_password_reset_token_for_user(user.id)
@@ -172,8 +160,6 @@ class AuthService:
         user = await self.users.get_by_email(email)
         if not user or not user.verify_password(password):
             raise InvalidCredentialsError
-        if not user.is_active:
-            raise InactiveUserError
 
         refresh_token_value = self.jwt_manager.create_refresh_token(
             {"user_id": user.id}
@@ -206,31 +192,27 @@ class AuthService:
 
         return self.jwt_manager.create_access_token({"user_id": user.id})
 
-    async def update_user_role(self, user_id: int, group: UserGroupEnum) -> str:
+    async def update_user_role(self, user_id: int, role: UserRoleEnum) -> str:
         target_user = await self.users.get_by_id(user_id)
         if not target_user:
             raise UserNotFoundError
 
-        target_group = await self.users.get_group_by_name(group)
-        if not target_group:
-            raise RoleNotFoundError
-
-        if target_group.name == UserGroupEnum.SUPERADMIN:
+        if role == UserRoleEnum.SUPERADMIN:
             raise SettingSuperAdminRoleError
 
-        if target_user.group_id == target_group.id:
+        if target_user.role == role:
             return "User already has this role."
 
-        current_group = await self.users.get_group_by_id(target_user.group_id)
         if (
-            current_group
-            and current_group.name == UserGroupEnum.SUPERADMIN
-            and group != UserGroupEnum.SUPERADMIN
+            target_user.role == UserRoleEnum.SUPERADMIN
+            and role != UserRoleEnum.SUPERADMIN
         ):
-            admins_count = await self.users.count_users_in_group(target_user.group_id)
+            admins_count = await self.users.count_users_with_role(
+                UserRoleEnum.SUPERADMIN
+            )
             if admins_count == 1:
                 raise LastAdminDemotionError
 
-        target_user.group_id = target_group.id
+        target_user.role = role
         await self.session.commit()
         return "User role updated successfully."
