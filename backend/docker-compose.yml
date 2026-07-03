@@ -1,0 +1,125 @@
+services:
+  db:
+    image: 'postgres:16'
+    container_name: clinic
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - clinic_data:/var/lib/postgresql/data/
+    networks:
+      - clinic_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d clinic_db -h 127.0.0.1 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_clinic
+    ports:
+      - "3333:80"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - pgadmin_clinic_data:/var/lib/pgadmin
+    networks:
+      - clinic_network
+
+  web:
+    restart: always
+    build: .
+    container_name: backend_clinic
+    command: [ "/bin/sh", "/commands/run_web_server_dev.sh" ]
+    env_file:
+      - .env
+    environment:
+      - LOG_LEVEL=debug
+      - PYTHONPATH=/app/src
+      - WATCHFILES_FORCE_POLLING=true
+      - POSTGRES_HOST=db
+      - EMAIL_HOST=mailhog
+      - S3_STORAGE_URL=http://minio:9000
+      - MINIO_URL=http://minio:9000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+    networks:
+      - clinic_network
+
+  mailhog:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/mailhog/Dockerfile
+    container_name: mailhog_clinic
+    command: [ "/bin/bash", "-c", "/commands/setup_mailhog_auth.sh && /go/bin/MailHog" ]
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    env_file:
+      - .env
+    environment:
+      MH_AUTH_FILE: /mailhog.auth
+    networks:
+      - clinic_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio-clinic
+    command: server --console-address ":9001" /data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file:
+      - .env
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - clinic_network
+
+  minio_mc:
+    image: minio/mc:latest
+    container_name: minio_mc_clinic
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: [ "sh /commands/setup_minio.sh" ]
+    depends_on:
+      minio:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - MINIO_URL=http://minio:9000
+    volumes:
+      - ./commands:/commands
+    networks:
+      - clinic_network
+
+volumes:
+  clinic_data:
+    driver: local
+  pgadmin_clinic_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  clinic_network:
+    driver: bridge
