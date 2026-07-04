@@ -5,18 +5,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from database import users_validators
 from database.models.users import UserRoleEnum
 
+CREDENTIALS_EXAMPLE = {"email": "doctor@example.com", "password": "StrongPassword123!"}
+
 
 class BaseEmailPasswordSchema(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
-        json_schema_extra={
-            "example": {
-                "email": "doctor@example.com",
-                "password": "StrongPassword123!",
-                "first_name": "Andrii",
-                "last_name": "Yarotskyi",
-            }
-        },
+        json_schema_extra={"example": CREDENTIALS_EXAMPLE},
     )
 
     email: EmailStr = Field(..., description="User email address.")
@@ -34,6 +29,16 @@ class BaseEmailPasswordSchema(BaseModel):
 
 
 class UserRegistrationRequestSchema(BaseEmailPasswordSchema):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                **CREDENTIALS_EXAMPLE,
+                "first_name": "Andrii",
+                "last_name": "Yarotskyi",
+            }
+        },
+    )
+
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
     phone_number: str | None = Field(default=None, max_length=20)

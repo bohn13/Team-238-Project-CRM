@@ -12,15 +12,15 @@ from database import (
     UserRoleEnum,
 )
 from exceptions import (
-    UserAlreadyExistsError,
     DatabaseWriteError,
     InvalidActivationTokenError,
-    InvalidPasswordResetTokenError,
     InvalidCredentialsError,
-    RefreshTokenNotFoundError,
-    UserNotFoundError,
+    InvalidPasswordResetTokenError,
     LastAdminDemotionError,
+    RefreshTokenNotFoundError,
     SettingSuperAdminRoleError,
+    UserAlreadyExistsError,
+    UserNotFoundError,
 )
 from notifications import EmailSenderInterface
 from repositories.users import UserRepository, as_aware_utc, utc_now
@@ -180,6 +180,24 @@ class AuthService:
 
         access_token = self.jwt_manager.create_access_token({"user_id": user.id})
         return LoginResult(access_token=access_token, refresh_token=refresh_token_value)
+
+    async def logout_user(self, user: UserModel, refresh_token: str) -> str:
+        refresh_token_record = await self.users.get_refresh_token(refresh_token)
+        if not refresh_token_record or user.id != refresh_token_record.user_id:
+            raise RefreshTokenNotFoundError
+
+        try:
+            await self.users.delete_refresh_token(
+                refresh_token_record=refresh_token_record
+            )
+            await self.session.commit()
+        except SQLAlchemyError as error:
+            await self.session.rollback()
+            raise DatabaseWriteError(
+                "An error occurred while processing the request."
+            ) from error
+
+        return "User logged out successfully."
 
     async def refresh_access_token(self, refresh_token: str) -> str:
         refresh_token_record = await self.users.get_refresh_token(refresh_token)

@@ -24,7 +24,9 @@ async def create_initial_admin(email: str) -> None:
 
     async with AsyncPostgresqlSessionLocal() as session:
         users = UserRepository(session)
-        existing_superadmins = await users.count_users_with_role(UserRoleEnum.SUPERADMIN)
+        existing_superadmins = await users.count_users_with_role(
+            UserRoleEnum.SUPERADMIN
+        )
         if existing_superadmins:
             raise RuntimeError(
                 "Superadmin already exists. Use superadmin role-change endpoint instead."

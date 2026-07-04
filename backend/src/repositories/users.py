@@ -106,3 +106,8 @@ class UserRepository:
         return await self.session.scalar(
             select(RefreshTokenModel).where(RefreshTokenModel.token == token)
         )
+
+    async def delete_refresh_token(
+        self, refresh_token_record: RefreshTokenModel
+    ) -> None:
+        await self.session.delete(refresh_token_record)

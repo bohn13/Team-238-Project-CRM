@@ -156,6 +156,32 @@ async def login_user(
 
 
 @router.post(
+    "/logout",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Log out user",
+)
+async def logout_user(
+    token_data: TokenRefreshRequestSchema,
+    user: CurrentUserDep,
+    auth_service: AuthService = AuthServiceDep,
+    jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
+) -> MessageResponseSchema:
+    try:
+        jwt_manager.decode_refresh_token(token_data.refresh_token)
+        await auth_service.logout_user(
+            user=user, refresh_token=token_data.refresh_token
+        )
+    except BaseSecurityError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)
+        ) from error
+    except AuthServiceError as error:
+        raise map_auth_error(error) from error
+    return MessageResponseSchema(message="Logout Successfully")
+
+
+@router.post(
     "/refresh/",
     response_model=TokenRefreshResponseSchema,
     status_code=status.HTTP_200_OK,

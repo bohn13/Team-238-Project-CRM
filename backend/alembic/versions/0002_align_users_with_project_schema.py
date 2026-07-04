@@ -21,7 +21,9 @@ def upgrade() -> None:
     op.add_column("users", sa.Column("role", sa.String(length=20), nullable=True))
     op.add_column("users", sa.Column("first_name", sa.String(length=50), nullable=True))
     op.add_column("users", sa.Column("last_name", sa.String(length=50), nullable=True))
-    op.add_column("users", sa.Column("phone_number", sa.String(length=20), nullable=True))
+    op.add_column(
+        "users", sa.Column("phone_number", sa.String(length=20), nullable=True)
+    )
     op.add_column("users", sa.Column("source", sa.String(length=30), nullable=True))
 
     op.execute(
@@ -135,8 +137,12 @@ def downgrade() -> None:
     op.drop_column("users", "first_name")
     op.drop_column("users", "role")
     op.execute(sa.text("UPDATE users SET email = '' WHERE email IS NULL"))
-    op.execute(sa.text("UPDATE users SET password_hash = '' WHERE password_hash IS NULL"))
-    op.alter_column("users", "email", existing_type=sa.String(length=50), nullable=False)
+    op.execute(
+        sa.text("UPDATE users SET password_hash = '' WHERE password_hash IS NULL")
+    )
+    op.alter_column(
+        "users", "email", existing_type=sa.String(length=50), nullable=False
+    )
     op.alter_column(
         "users",
         "password_hash",
