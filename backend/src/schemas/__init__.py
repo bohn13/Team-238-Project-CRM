@@ -27,3 +27,9 @@ __all__ = [
     "UserRegistrationResponseSchema",
     "UserRoleUpdateRequestSchema",
 ]
+
+from .patient import (
+    PatientCreateRequestSchema,
+    PatientResponseSchema,
+    PatientUpdateRequestSchema,
+)
