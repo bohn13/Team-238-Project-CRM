@@ -12,7 +12,7 @@ class GenderEnum(enum.Enum):
     WOMAN = "WOMAN"
 
 
-class Patient(Base):
+class PatientModel(Base):
     __tablename__ = "patients"
 
     patient_id: Mapped[int] = mapped_column(
