@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.session_postgresql import get_db
+from database.session_postgresql import get_postgresql_db
 from repositories.patients import (
     create_patient,
     delete_patient,
@@ -17,14 +17,14 @@ router = APIRouter(prefix="/patients", tags=["Patients"])
 @router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
 async def create_patient_route(
     patient_data: PatientCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_postgresql_db),
 ):
     return await create_patient(db, patient_data)
 
 
 @router.get("/", response_model=list[PatientListResponse])
 async def get_patients_route(
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_postgresql_db),
 ):
     return await get_patients(db)
 
@@ -32,7 +32,7 @@ async def get_patients_route(
 @router.get("/{patient_id}", response_model=PatientResponse)
 async def get_patient_route(
     patient_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
 
@@ -49,7 +49,7 @@ async def get_patient_route(
 async def update_patient_route(
     patient_id: int,
     patient_data: PatientUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
 
@@ -65,7 +65,7 @@ async def update_patient_route(
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_patient_route(
     patient_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
 

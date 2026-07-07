@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models.user import UserModel
-from database.models.patients import PatientModel
+from database.models.users import UserModel
+from database.models.patient import PatientModel
 from schemas.patients import PatientCreate, PatientUpdate
 
 
