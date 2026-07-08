@@ -1,5 +1,3 @@
-from datetime import date, datetime
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -22,7 +20,6 @@ class PatientResponse(PatientBase):
 
     id: int
     user_id: int
-    created_at: datetime
 
 
 class PatientListResponse(BaseModel):
@@ -34,3 +31,4 @@ class PatientListResponse(BaseModel):
     last_name: str
     phone_number: str | None
     date_of_birth: date | None
+    #last_visit_date: date | None = None
