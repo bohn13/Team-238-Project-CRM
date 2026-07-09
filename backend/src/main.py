@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
 from routes import accounts_router, doctors_router, patients_router
+
 settings = get_settings()
 
 app = FastAPI(
