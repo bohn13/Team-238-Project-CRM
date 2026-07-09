@@ -1,0 +1,42 @@
+Index: backend/src/repositories/patients.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from sqlalchemy import select\r\nfrom sqlalchemy.ext.asyncio import AsyncSession\r\n\r\nfrom database import Patient\r\n\r\n\r\nclass PatientRepository:\r\n    def __init__(self, session: AsyncSession):\r\n        self.session = session\r\n\r\n    async def get_by_id(self, patient_id: int) -> Patient | None:\r\n        return await self.session.scalar(\r\n            select(Patient).where(Patient.patient_id == patient_id)\r\n        )\r\n\r\n    async def get_all(self) -> list[Patient]:\r\n        result = await self.session.scalars(select(Patient))\r\n        return list(result.all())\r\n\r\n    def add_patient(self, patient: Patient) -> None:\r\n        self.session.add(patient)\r\n\r\n    async def delete_patient(self, patient: Patient) -> None:\r\n        await self.session.delete(patient)\r\n\r\n    async def flush(self) -> None:\r\n        await self.session.flush()\r\n
+===================================================================
+diff --git a/backend/src/repositories/patients.py b/backend/src/repositories/patients.py
+--- a/backend/src/repositories/patients.py	(revision 087cd586bdeea8c07ddc9dcb43aebd326063f5c1)
++++ b/backend/src/repositories/patients.py	(date 1783268369944)
+@@ -1,26 +1,26 @@
+ from sqlalchemy import select
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+-from database import Patient
++from database import PatientModel
+ 
+ 
+ class PatientRepository:
+     def __init__(self, session: AsyncSession):
+         self.session = session
+ 
+-    async def get_by_id(self, patient_id: int) -> Patient | None:
++    async def get_by_id(self, patient_id: int) -> PatientModel | None:
+         return await self.session.scalar(
+-            select(Patient).where(Patient.patient_id == patient_id)
++            select(PatientModel).where(PatientModel.patient_id == patient_id)
+         )
+ 
+-    async def get_all(self) -> list[Patient]:
+-        result = await self.session.scalars(select(Patient))
++    async def get_all(self) -> list[PatientModel]:
++        result = await self.session.scalars(select(PatientModel))
+         return list(result.all())
+ 
+-    def add_patient(self, patient: Patient) -> None:
++    def add_patient(self, patient: PatientModel) -> None:
+         self.session.add(patient)
+ 
+-    async def delete_patient(self, patient: Patient) -> None:
++    async def delete_patient(self, patient: PatientModel) -> None:
+         await self.session.delete(patient)
+ 
+     async def flush(self) -> None:

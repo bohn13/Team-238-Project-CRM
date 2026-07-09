@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
-from routes import accounts_router, doctors_router
-
+from routes import accounts_router, doctors_router, patients_router
 settings = get_settings()
 
 app = FastAPI(
@@ -24,6 +23,11 @@ app = FastAPI(
 
 app.include_router(accounts_router, prefix="/accounts", tags=["accounts"])
 app.include_router(doctors_router, prefix="/doctors", tags=["doctors"])
+app.include_router(
+    patients_router,
+    prefix="/api/patients",
+    tags=["Patients"],
+)
 
 origins = [settings.FRONTEND_BASE_URL]
 
