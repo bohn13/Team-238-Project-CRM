@@ -19,7 +19,11 @@ app = FastAPI(
 )
 
 app.include_router(accounts_router, prefix="/accounts", tags=["accounts"])
-app.include_router(patients_router, prefix="/api")
+app.include_router(
+    patients_router,
+    prefix="/api/patients",
+    tags=["Patients"],
+)
 
 origins = [settings.FRONTEND_BASE_URL]
 

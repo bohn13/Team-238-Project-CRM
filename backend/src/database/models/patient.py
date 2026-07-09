@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-
+import enum
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.models.base import Base
+
+
+class PatientGenderEnum(str, enum.Enum):
+    MALE = "male"
+    FEMALE = "female"
 
 
 class PatientModel(Base):
@@ -17,7 +22,7 @@ class PatientModel(Base):
         nullable=False,
         unique=True,
     )
-    gender: Mapped[str | None] = mapped_column(String(20))
+    gender: Mapped[PatientGenderEnum | None] = mapped_column(String(20))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     address: Mapped[str | None] = mapped_column(String(255))
 

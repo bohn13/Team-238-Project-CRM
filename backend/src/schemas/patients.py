@@ -1,10 +1,25 @@
-from pydantic import BaseModel, ConfigDict
+import enum
+from datetime import date
+
+from pydantic import BaseModel, ConfigDict, field_validator
+
+
+class PatientGenderEnum(str, enum.Enum):
+    MALE = "male"
+    FEMALE = "female"
 
 
 class PatientBase(BaseModel):
-    gender: str | None = None
+    gender: PatientGenderEnum | None = None
     date_of_birth: date | None = None
     address: str | None = None
+
+    @field_validator("date_of_birth")
+    @classmethod
+    def validate_date_of_birth(cls, value: date | None) -> date | None:
+        if value is not None and value > date.today():
+            raise ValueError("Date of birth cannot be in the future.")
+        return value
 
 
 class PatientCreate(PatientBase):

@@ -9,14 +9,22 @@ from repositories.patients import (
     get_patients,
     update_patient,
 )
-from schemas.patients import PatientCreate, PatientResponse, PatientUpdate, PatientListResponse
+from schemas.patients import (
+    PatientCreate,
+    PatientListResponse,
+    PatientResponse,
+    PatientUpdate,
+)
+from security.permissions import DoctorAdminOrSuperAdminDep
 
-router = APIRouter(prefix="/patients", tags=["Patients"])
+
+router = APIRouter()
 
 
 @router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
 async def create_patient_route(
     patient_data: PatientCreate,
+    current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
 ):
     return await create_patient(db, patient_data)
@@ -24,6 +32,7 @@ async def create_patient_route(
 
 @router.get("/", response_model=list[PatientListResponse])
 async def get_patients_route(
+    current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
 ):
     return await get_patients(db)
@@ -32,6 +41,7 @@ async def get_patients_route(
 @router.get("/{patient_id}", response_model=PatientResponse)
 async def get_patient_route(
     patient_id: int,
+    current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
@@ -49,6 +59,7 @@ async def get_patient_route(
 async def update_patient_route(
     patient_id: int,
     patient_data: PatientUpdate,
+    current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
@@ -65,6 +76,7 @@ async def update_patient_route(
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_patient_route(
     patient_id: int,
+    current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
 ):
     patient = await get_patient_by_id(db, patient_id)
