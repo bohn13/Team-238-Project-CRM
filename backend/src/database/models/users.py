@@ -16,6 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from database.models.base import Base
+from database.models.patient import PatientModel
 from database.validators import users as validators
 from security.passwords import hash_password, verify_password
 from security.utils import generate_secure_token
@@ -59,6 +60,9 @@ class UserModel(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     doctor_profile: Mapped[DoctorModel | None] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    patient: Mapped[PatientModel | None] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 

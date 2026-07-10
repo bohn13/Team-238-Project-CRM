@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from datetime import date, datetime
 import enum
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, func
+from datetime import date
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.models.base import Base
+
+if TYPE_CHECKING:
+    from database.models.users import UserModel
 
 
 class PatientGenderEnum(str, enum.Enum):
@@ -26,4 +31,4 @@ class PatientModel(Base):
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     address: Mapped[str | None] = mapped_column(String(255))
 
-    user: Mapped["UserModel"] = relationship(back_populates="patient")
+    user: Mapped[UserModel] = relationship(back_populates="patient")
