@@ -1,0 +1,11 @@
+email,first_name,last_name,password,phone_number,is_active,specialization,years_experience,employment_type,avatar_url
+seed.doctor01@example.com,Oksana,Tkach,SeedPassword123!,+380502000001,true,Cardiology,12,full_time,
+seed.doctor02@example.com,Petro,Lysenko,SeedPassword123!,+380502000002,true,Dermatology,8,part_time,
+seed.doctor03@example.com,Kateryna,Polishchuk,SeedPassword123!,+380502000003,true,Neurology,15,full_time,
+seed.doctor04@example.com,Mykola,Marchenko,SeedPassword123!,+380502000004,true,Pediatrics,6,full_time,
+seed.doctor05@example.com,Anastasiia,Khmara,SeedPassword123!,+380502000005,true,Ophthalmology,10,part_time,
+seed.doctor06@example.com,Roman,Bilyk,SeedPassword123!,+380502000006,true,Orthopedics,14,full_time,
+seed.doctor07@example.com,Yuliia,Datsenko,SeedPassword123!,+380502000007,true,Endocrinology,9,full_time,
+seed.doctor08@example.com,Serhii,Horbach,SeedPassword123!,+380502000008,true,Gastroenterology,11,part_time,
+seed.doctor09@example.com,Alina,Zhuk,SeedPassword123!,+380502000009,true,Psychiatry,7,full_time,
+seed.doctor10@example.com,Vasyl,Boiko,SeedPassword123!,+380502000010,true,Radiology,13,full_time,

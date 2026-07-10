@@ -1,0 +1,11 @@
+email,first_name,last_name,password,role,phone_number,is_active
+seed.user01@example.com,Olena,Koval,SeedPassword123!,user,+380501000001,true
+seed.user02@example.com,Andrii,Melnyk,SeedPassword123!,user,+380501000002,true
+seed.user03@example.com,Maryna,Bondar,SeedPassword123!,manager,+380501000003,true
+seed.user04@example.com,Taras,Shevchenko,SeedPassword123!,user,+380501000004,true
+seed.user05@example.com,Iryna,Levchenko,SeedPassword123!,admin,+380501000005,true
+seed.user06@example.com,Bohdan,Kravets,SeedPassword123!,user,+380501000006,true
+seed.user07@example.com,Natalia,Savchuk,SeedPassword123!,patient,+380501000007,true
+seed.user08@example.com,Dmytro,Hnatiuk,SeedPassword123!,user,+380501000008,true
+seed.user09@example.com,Sofia,Rudenko,SeedPassword123!,manager,+380501000009,true
+seed.user10@example.com,Viktor,Moroz,SeedPassword123!,user,+380501000010,true

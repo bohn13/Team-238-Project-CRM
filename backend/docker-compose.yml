@@ -53,10 +53,36 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     volumes:
       - ./src:/app/src
       - ./alembic:/app/alembic
       - ./alembic.ini:/app/alembic.ini
+    networks:
+      - clinic_network
+
+  migration:
+    build: .
+    container_name: backend_clinic_migration
+    working_dir: /app
+    command: [ "/bin/sh", "/commands/run_migration.sh" ]
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app/src
+      - POSTGRES_HOST=db
+      - SEED_DATABASE=${SEED_DATABASE:-0}
+      - SEED_UPDATE_EXISTING=${SEED_UPDATE_EXISTING:-0}
+      - SEED_BATCH_SIZE=${SEED_BATCH_SIZE:-1000}
+      - SEED_DEFAULT_PASSWORD=${SEED_DEFAULT_PASSWORD:-SeedPassword123!}
+      - SEED_DATA_DIR=/app/src/database/seed_data
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src/database/seed_data:/app/src/database/seed_data:ro
+    restart: "no"
     networks:
       - clinic_network
 
