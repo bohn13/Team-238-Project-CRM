@@ -87,8 +87,9 @@ class AuthService:
             ) from error
 
         activation_link = (
-            f"{self.settings.FRONTEND_BASE_URL}/accounts/activate/"
-            f"?token={activation_token.token}"
+            f"{self.settings.FRONTEND_BASE_URL}/#/accounts/activate/"
+            f"?email={user.email}"
+            f"&token={activation_token.token}"
         )
         await self.email_sender.send_activation_email(user.email, activation_link)
         return user

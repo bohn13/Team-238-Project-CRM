@@ -42,7 +42,7 @@ class UserModel(Base):
     first_name: Mapped[str] = mapped_column(String(50), nullable=False)
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone_number: Mapped[str | None] = mapped_column(String(20), unique=True)
-    email: Mapped[str | None] = mapped_column(String(50), unique=True)
+    email: Mapped[str] = mapped_column(String(50), unique=True)
     _password_hash: Mapped[str | None] = mapped_column("password_hash", String(255))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(
