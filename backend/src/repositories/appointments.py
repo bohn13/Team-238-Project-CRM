@@ -1,112 +1,197 @@
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.appointments import AppointmentModel, AppointmentStatusEnum
+from database.models.appointments import (
+    AppointmentModel,
+    AppointmentStatusEnum,
+)
 from schemas.appointments import AppointmentCreate, AppointmentUpdate
 
 
-async def is_doctor_busy(
-    db: AsyncSession,
-    doctor_id: int,
-    date_time: datetime,
-    exclude_appointment_id: int | None = None,
-) -> bool:
-    query = select(AppointmentModel).where(
-        AppointmentModel.doctor_id == doctor_id,
-        AppointmentModel.date_time == date_time,
-        AppointmentModel.status != AppointmentStatusEnum.CANCELLED,
-    )
+class AppointmentRepository:
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
 
-    if exclude_appointment_id is not None:
-        query = query.where(AppointmentModel.id != exclude_appointment_id)
+    async def is_doctor_busy(
+        self,
+        doctor_id: int,
+        date_time: datetime,
+        duration: int = 30,
+        exclude_appointment_id: int | None = None,
+    ) -> bool:
+        new_appointment_end = date_time + timedelta(minutes=duration)
 
-    result = await db.execute(query)
-    return result.scalar_one_or_none() is not None
+        existing_appointment_end = (
+            AppointmentModel.date_time
+            + AppointmentModel.duration * text("INTERVAL '1 minute'")
+        )
 
+        query = select(AppointmentModel.id).where(
+            AppointmentModel.doctor_id == doctor_id,
+            AppointmentModel.status != AppointmentStatusEnum.CANCELLED,
+            AppointmentModel.date_time < new_appointment_end,
+            existing_appointment_end > date_time,
+        )
 
-async def create_appointment(
-    db: AsyncSession,
-    appointment_data: AppointmentCreate,
-) -> AppointmentModel:
-    doctor_busy = await is_doctor_busy(
-        db=db,
-        doctor_id=appointment_data.doctor_id,
-        date_time=appointment_data.date_time,
-    )
+        if exclude_appointment_id is not None:
+            query = query.where(
+                AppointmentModel.id != exclude_appointment_id
+            )
 
-    if doctor_busy:
-        raise ValueError("Doctor already has an appointment at this time.")
+        result = await self.db.execute(query)
 
-    appointment = AppointmentModel(
-        **appointment_data.model_dump(),
-        status=AppointmentStatusEnum.SCHEDULED,
-    )
+        return result.scalar_one_or_none() is not None
 
-    db.add(appointment)
-    await db.commit()
-    await db.refresh(appointment)
-    return appointment
+    async def create(
+        self,
+        appointment_data: AppointmentCreate,
+    ) -> AppointmentModel:
+        appointment_values = appointment_data.model_dump()
 
+        duration = appointment_values.get("duration") or 30
 
-async def get_appointments(db: AsyncSession) -> list[AppointmentModel]:
-    result = await db.execute(select(AppointmentModel))
-    return list(result.scalars().all())
+        doctor_busy = await self.is_doctor_busy(
+            doctor_id=appointment_data.doctor_id,
+            date_time=appointment_data.date_time,
+            duration=duration,
+        )
 
+        if doctor_busy:
+            raise ValueError(
+                "Doctor already has an appointment during this time."
+            )
 
-async def get_appointment_by_id(
-    db: AsyncSession,
-    appointment_id: int,
-) -> AppointmentModel | None:
-    result = await db.execute(
-        select(AppointmentModel).where(AppointmentModel.id == appointment_id)
-    )
-    return result.scalar_one_or_none()
+        appointment = AppointmentModel(
+            **appointment_values,
+            duration=duration,
+            status=AppointmentStatusEnum.SCHEDULED,
+        )
 
+        self.db.add(appointment)
+        await self.db.commit()
+        await self.db.refresh(appointment)
 
-async def update_appointment(
-    db: AsyncSession,
-    appointment: AppointmentModel,
-    appointment_data: AppointmentUpdate,
-) -> AppointmentModel:
-    update_data = appointment_data.model_dump(exclude_unset=True)
+        return appointment
 
-    new_doctor_id = update_data.get("doctor_id", appointment.doctor_id)
-    new_date_time = update_data.get("date_time", appointment.date_time)
+    async def get_all(
+        self,
+        doctor_id: int | None = None,
+        patient_id: int | None = None,
+        appointment_date: date | None = None,
+        appointment_status: AppointmentStatusEnum | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[AppointmentModel]:
+        query = select(AppointmentModel)
 
-    doctor_busy = await is_doctor_busy(
-        db=db,
-        doctor_id=new_doctor_id,
-        date_time=new_date_time,
-        exclude_appointment_id=appointment.id,
-    )
+        if doctor_id is not None:
+            query = query.where(
+                AppointmentModel.doctor_id == doctor_id
+            )
 
-    if doctor_busy:
-        raise ValueError("Doctor already has an appointment at this time.")
+        if patient_id is not None:
+            query = query.where(
+                AppointmentModel.patient_id == patient_id
+            )
 
-    for field, value in update_data.items():
-        setattr(appointment, field, value)
+        if appointment_date is not None:
+            day_start = datetime.combine(
+                appointment_date,
+                time.min,
+            )
+            day_end = day_start + timedelta(days=1)
 
-    await db.commit()
-    await db.refresh(appointment)
-    return appointment
+            query = query.where(
+                AppointmentModel.date_time >= day_start,
+                AppointmentModel.date_time < day_end,
+            )
 
+        if appointment_status is not None:
+            query = query.where(
+                AppointmentModel.status == appointment_status
+            )
 
-async def cancel_appointment(
-    db: AsyncSession,
-    appointment: AppointmentModel,
-) -> AppointmentModel:
-    appointment.status = AppointmentStatusEnum.CANCELLED
+        query = (
+            query
+            .order_by(AppointmentModel.date_time)
+            .offset(offset)
+            .limit(limit)
+        )
 
-    await db.commit()
-    await db.refresh(appointment)
-    return appointment
+        result = await self.db.execute(query)
 
+        return list(result.scalars().all())
 
-async def delete_appointment(
-    db: AsyncSession,
-    appointment: AppointmentModel,
-) -> None:
-    await db.delete(appointment)
-    await db.commit()
+    async def get_by_id(
+        self,
+        appointment_id: int,
+    ) -> AppointmentModel | None:
+        result = await self.db.execute(
+            select(AppointmentModel).where(
+                AppointmentModel.id == appointment_id
+            )
+        )
+
+        return result.scalar_one_or_none()
+
+    async def update(
+        self,
+        appointment: AppointmentModel,
+        appointment_data: AppointmentUpdate,
+    ) -> AppointmentModel:
+        update_data = appointment_data.model_dump(
+            exclude_unset=True
+        )
+
+        new_doctor_id = update_data.get(
+            "doctor_id",
+            appointment.doctor_id,
+        )
+        new_date_time = update_data.get(
+            "date_time",
+            appointment.date_time,
+        )
+        new_duration = update_data.get(
+            "duration",
+            appointment.duration,
+        )
+
+        doctor_busy = await self.is_doctor_busy(
+            doctor_id=new_doctor_id,
+            date_time=new_date_time,
+            duration=new_duration,
+            exclude_appointment_id=appointment.id,
+        )
+
+        if doctor_busy:
+            raise ValueError(
+                "Doctor already has an appointment during this time."
+            )
+
+        for field, value in update_data.items():
+            setattr(appointment, field, value)
+
+        await self.db.commit()
+        await self.db.refresh(appointment)
+
+        return appointment
+
+    async def cancel(
+        self,
+        appointment: AppointmentModel,
+    ) -> AppointmentModel:
+        appointment.status = AppointmentStatusEnum.CANCELLED
+
+        await self.db.commit()
+        await self.db.refresh(appointment)
+
+        return appointment
+
+    async def delete(
+        self,
+        appointment: AppointmentModel,
+    ) -> None:
+        await self.db.delete(appointment)
+        await self.db.commit()
