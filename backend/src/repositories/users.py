@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -111,3 +111,27 @@ class UserRepository:
         self, refresh_token_record: RefreshTokenModel
     ) -> None:
         await self.session.delete(refresh_token_record)
+
+    async def list(self, search: str | None) -> list[UserModel]:
+        stmt = select(UserModel).where(
+            (UserModel.is_active.is_(True)) & (UserModel.role == UserRoleEnum.USER)
+        )
+
+        search_term = search.strip() if search else None
+        if search_term:
+            pattern = f"%{search_term}%"
+
+            stmt = stmt.where(
+                or_(
+                    UserModel.email.ilike(pattern),
+                    UserModel.first_name.ilike(pattern),
+                    UserModel.last_name.ilike(pattern),
+                )
+            )
+        stmt = stmt.order_by(
+            UserModel.registration_date.desc(),
+            UserModel.id.desc(),
+        ).limit(10)
+
+        result = await self.session.scalars(stmt)
+        return list(result)

@@ -29,9 +29,6 @@ WORKDIR /app
 # Install dependencies with uv
 RUN uv sync --frozen --no-dev
 
-# Selecting a working directory
-WORKDIR /app/src
-
 # Copy the source code
 COPY ./src /app/src
 COPY ./alembic.ini /app/alembic.ini

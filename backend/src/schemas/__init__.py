@@ -1,3 +1,9 @@
+from schemas.doctors import (
+    DoctorListResponseSchema,
+    DoctorProfileCreateRequestSchema,
+    DoctorProfileUpdateRequestSchema,
+    DoctorResponseSchema,
+)
 from schemas.users import (
     CurrentUserResponseSchema,
     MessageResponseSchema,
@@ -6,6 +12,7 @@ from schemas.users import (
     TokenRefreshRequestSchema,
     TokenRefreshResponseSchema,
     UserActivationRequestSchema,
+    UserItemResponseSchema,
     UserLoginRequestSchema,
     UserLoginResponseSchema,
     UserRegistrationRequestSchema,
@@ -14,6 +21,7 @@ from schemas.users import (
 )
 
 __all__ = [
+    "UserItemResponseSchema",
     "CurrentUserResponseSchema",
     "MessageResponseSchema",
     "PasswordResetCompleteRequestSchema",
@@ -26,4 +34,8 @@ __all__ = [
     "UserRegistrationRequestSchema",
     "UserRegistrationResponseSchema",
     "UserRoleUpdateRequestSchema",
+    "DoctorListResponseSchema",
+    "DoctorProfileCreateRequestSchema",
+    "DoctorProfileUpdateRequestSchema",
+    "DoctorResponseSchema",
 ]

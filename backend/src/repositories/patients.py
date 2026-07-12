@@ -35,9 +35,7 @@ async def get_patient_by_id(
     db: AsyncSession,
     patient_id: int,
 ) -> PatientModel | None:
-    result = await db.execute(
-        select(PatientModel).where(PatientModel.id == patient_id)
-    )
+    result = await db.execute(select(PatientModel).where(PatientModel.id == patient_id))
     return result.scalar_one_or_none()
 
 

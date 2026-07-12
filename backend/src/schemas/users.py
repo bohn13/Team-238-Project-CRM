@@ -111,5 +111,14 @@ class CurrentUserResponseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserItemResponseSchema(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class MessageResponseSchema(BaseModel):
     message: str = Field(..., description="Operation result message.")

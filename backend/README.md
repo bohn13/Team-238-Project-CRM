@@ -1,6 +1,7 @@
 # Clinic CRM Backend
 
-Backend для CRM клініки на FastAPI. Проєкт запускається через Docker Compose і піднімає API, PostgreSQL, поштовий сервіс для локальної розробки та файлове сховище MinIO.
+Backend для CRM клініки на FastAPI. Проєкт запускається через Docker Compose і піднімає API, PostgreSQL, поштовий сервіс
+для локальної розробки та файлове сховище MinIO.
 
 ## Швидкий запуск
 
@@ -19,7 +20,7 @@ docker compose up --build
 3. Відкрити новий термінал і створити першого адміністратора:
 
 ```bash
-docker exec -it backend_clinic python create_initial_admin.py --email admin@admin.com
+docker exec -it backend_clinic python src/create_initial_admin.py --email admin@admin.com
 ```
 
 4. Ввести пароль адміністратора і повторити його для підтвердження.

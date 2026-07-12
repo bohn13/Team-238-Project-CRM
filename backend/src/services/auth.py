@@ -87,8 +87,9 @@ class AuthService:
             ) from error
 
         activation_link = (
-            f"{self.settings.FRONTEND_BASE_URL}/accounts/activate/"
-            f"?token={activation_token.token}"
+            f"{self.settings.FRONTEND_BASE_URL}/#/accounts/activate/"
+            f"?email={user.email}"
+            f"&token={activation_token.token}"
         )
         await self.email_sender.send_activation_email(user.email, activation_link)
         return user
@@ -101,8 +102,15 @@ class AuthService:
                 await self.session.commit()
             raise InvalidActivationTokenError
 
-        await self.users.delete_activation_token(token_record)
-        await self.session.commit()
+        try:
+            token_record.user.is_active = True
+            await self.users.delete_activation_token(token_record)
+            await self.session.commit()
+        except SQLAlchemyError as error:
+            await self.session.rollback()
+            raise DatabaseWriteError(
+                "An error occurred while activating the account."
+            ) from error
 
         login_link = f"{self.settings.FRONTEND_BASE_URL}/accounts/login/"
         await self.email_sender.send_activation_complete_email(email, login_link)
@@ -158,7 +166,7 @@ class AuthService:
 
     async def login_user(self, email: str, password: str) -> LoginResult:
         user = await self.users.get_by_email(email)
-        if not user or not user.verify_password(password):
+        if not user or not user.is_active or not user.verify_password(password):
             raise InvalidCredentialsError
 
         refresh_token_value = self.jwt_manager.create_refresh_token(
@@ -234,3 +242,6 @@ class AuthService:
         target_user.role = role
         await self.session.commit()
         return "User role updated successfully."
+
+    async def list_users(self, search: str | None = None) -> list[UserModel]:
+        return await self.users.list(search=search)

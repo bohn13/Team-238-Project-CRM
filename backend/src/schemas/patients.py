@@ -46,4 +46,4 @@ class PatientListResponse(BaseModel):
     last_name: str
     phone_number: str | None
     date_of_birth: date | None
-    #last_visit_date: date | None = None
+    # last_visit_date: date | None = None

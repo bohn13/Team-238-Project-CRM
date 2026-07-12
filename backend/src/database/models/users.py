@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import enum
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     ForeignKey,
     Integer,
@@ -14,9 +16,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from database.models.base import Base
+from database.models.patient import PatientModel
 from database.validators import users as validators
 from security.passwords import hash_password, verify_password
 from security.utils import generate_secure_token
+
+if TYPE_CHECKING:
+    from database.models.doctors import DoctorModel
 
 
 class UserRoleEnum(str, enum.Enum):
@@ -25,6 +31,7 @@ class UserRoleEnum(str, enum.Enum):
     DOCTOR = "doctor"
     MANAGER = "manager"
     PATIENT = "patient"
+    USER = "user"
 
 
 class UserModel(Base):
@@ -35,8 +42,9 @@ class UserModel(Base):
     first_name: Mapped[str] = mapped_column(String(50), nullable=False)
     last_name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone_number: Mapped[str | None] = mapped_column(String(20), unique=True)
-    email: Mapped[str | None] = mapped_column(String(50), unique=True)
+    email: Mapped[str] = mapped_column(String(50), unique=True)
     _password_hash: Mapped[str | None] = mapped_column("password_hash", String(255))
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     registration_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -51,6 +59,12 @@ class UserModel(Base):
     refresh_tokens: Mapped[list[RefreshTokenModel]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    doctor_profile: Mapped[DoctorModel | None] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    patient: Mapped[PatientModel | None] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
     @classmethod
     def create(
@@ -59,7 +73,7 @@ class UserModel(Base):
         raw_password: str,
         first_name: str,
         last_name: str,
-        role: UserRoleEnum = UserRoleEnum.DOCTOR,
+        role: UserRoleEnum = UserRoleEnum.USER,
         source: str = "website",
     ) -> UserModel:
         user = cls(
