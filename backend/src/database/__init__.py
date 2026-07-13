@@ -1,4 +1,6 @@
 from database.models.base import Base
+from database.models.doctors import DoctorEmploymentTypeEnum, DoctorModel
+from database.models.patient import PatientGenderEnum, PatientModel
 from database.models.users import (
     ActivationTokenModel,
     PasswordResetTokenModel,
@@ -20,7 +22,11 @@ __all__ = [
     "ActivationTokenModel",
     "AsyncSessionDep",
     "Base",
+    "DoctorEmploymentTypeEnum",
+    "DoctorModel",
     "PasswordResetTokenModel",
+    "PatientGenderEnum",
+    "PatientModel",
     "RefreshTokenModel",
     "SyncSessionLocal",
     "UserModel",

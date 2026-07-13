@@ -35,6 +35,7 @@ async def create_initial_admin(email: str) -> None:
         existing_user = await users.get_by_email(normalized_email)
         if existing_user:
             existing_user.role = UserRoleEnum.SUPERADMIN
+            existing_user.is_active = True
             existing_user.password = password
         else:
             superadmin = UserModel.create(
@@ -45,6 +46,7 @@ async def create_initial_admin(email: str) -> None:
                 role=UserRoleEnum.SUPERADMIN,
                 source="admin_created",
             )
+            superadmin.is_active = True
             users.add_user(superadmin)
 
         await session.commit()

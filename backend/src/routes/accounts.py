@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from config import (
     Settings,
@@ -7,7 +7,7 @@ from config import (
     get_settings,
 )
 from database import AsyncSessionDep
-from exceptions import BaseSecurityError
+from exceptions import AuthServiceError, BaseSecurityError
 from notifications import EmailSenderInterface
 from schemas import (
     CurrentUserResponseSchema,
@@ -17,17 +17,17 @@ from schemas import (
     TokenRefreshRequestSchema,
     TokenRefreshResponseSchema,
     UserActivationRequestSchema,
+    UserItemResponseSchema,
     UserLoginRequestSchema,
     UserLoginResponseSchema,
     UserRegistrationRequestSchema,
     UserRegistrationResponseSchema,
     UserRoleUpdateRequestSchema,
 )
-from security.interfaces import JWTAuthManagerInterface
 from security.auth import CurrentUserDep
+from security.interfaces import JWTAuthManagerInterface
 from security.permissions import AdminDep
 from services.auth import AuthService
-from exceptions import AuthServiceError
 
 router = APIRouter()
 
@@ -226,10 +226,25 @@ async def update_user_role(
 
 
 @router.get(
-    "/users/me",
+    "/users/me/",
     response_model=CurrentUserResponseSchema,
     status_code=status.HTTP_200_OK,
     summary="Get current user",
 )
 async def get_current_user_profile(user: CurrentUserDep) -> CurrentUserResponseSchema:
     return CurrentUserResponseSchema.model_validate(user)
+
+
+@router.get(
+    "/users/",
+    response_model=list[UserItemResponseSchema],
+    status_code=status.HTTP_200_OK,
+    summary="Get active users",
+)
+async def list_users(
+    _: AdminDep,
+    auth_service: AuthService = AuthServiceDep,
+    search: str | None = Query(default=None, max_length=100),
+) -> list[UserItemResponseSchema]:
+    result = await auth_service.list_users(search=search)
+    return [UserItemResponseSchema.model_validate(item) for item in result]

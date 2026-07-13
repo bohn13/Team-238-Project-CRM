@@ -27,4 +27,24 @@ async def get_superadmin_user(user: UserModel = Depends(get_current_user)) -> Us
     return user
 
 
+async def get_doctor_admin_or_superadmin_user(
+    user: UserModel = Depends(get_current_user),
+) -> UserModel:
+    if user.role not in (
+        UserRoleEnum.SUPERADMIN,
+        UserRoleEnum.ADMIN,
+        UserRoleEnum.DOCTOR,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission for this action.",
+        )
+    return user
+
+
+DoctorAdminOrSuperAdminDep = Annotated[
+    UserModel,
+    Depends(get_doctor_admin_or_superadmin_user),
+]
+
 SuperAdminDep = Annotated[UserModel, Depends(get_superadmin_user)]

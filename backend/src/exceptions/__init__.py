@@ -14,6 +14,14 @@ from exceptions.auth import (
     UserNotFoundError,
     SettingSuperAdminRoleError,
 )
+from exceptions.doctors import (
+    DoctorProfileAlreadyExistsError,
+    DoctorProfileNotFoundError,
+    DoctorProfilePermissionError,
+    DoctorServiceError,
+    InvalidDoctorAvatarError,
+    InvalidDoctorProfileUserError,
+)
 
 __all__ = [
     "BaseEmailError",
@@ -34,4 +42,10 @@ __all__ = [
     "RefreshTokenNotFoundError",
     "UserNotFoundError",
     "SettingSuperAdminRoleError",
+    "DoctorProfileAlreadyExistsError",
+    "DoctorProfileNotFoundError",
+    "DoctorProfilePermissionError",
+    "DoctorServiceError",
+    "InvalidDoctorAvatarError",
+    "InvalidDoctorProfileUserError",
 ]
