@@ -26,6 +26,7 @@ def get_accounts_email_notificator(
         hostname=settings.EMAIL_HOST,
         port=settings.EMAIL_PORT,
         email=settings.EMAIL_HOST_USER,
+        email_from=settings.EMAIL_FROM,
         password=settings.EMAIL_HOST_PASSWORD,
         use_tls=settings.EMAIL_USE_TLS,
         template_dir=settings.PATH_TO_EMAIL_TEMPLATES_DIR,

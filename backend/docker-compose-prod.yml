@@ -1,0 +1,48 @@
+services:
+  db:
+    image: 'postgres:16'
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    volumes:
+      - clinic_postgres_data:/var/lib/postgresql/data/
+    networks:
+      - clinic_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\" -h 127.0.0.1 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    restart: unless-stopped
+    build: .
+    working_dir: /app
+    command: [ "/bin/sh", "/commands/run_web_server_prod.sh" ]
+    env_file:
+      - .env.prod
+    environment:
+      - PYTHONPATH=/app/src
+      - POSTGRES_HOST=db
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=5)\"" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - clinic_network
+
+volumes:
+  clinic_postgres_data:
+    driver: local
+
+networks:
+  clinic_network:
+    driver: bridge
