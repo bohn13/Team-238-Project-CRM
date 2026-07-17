@@ -1,0 +1,14 @@
+  <div className="flex">
+              <div className="flex justify-center items-center w-[80px] h-[80px] mr-[15px] rounded-[100%] bg-[#E5E7EB]">
+                <FiUser className="w-[24px] h-[24px]" />
+              </div>
+              <div className="flex flex-col">
+                <h1 className=" font-[Inter]  text-[14px] text-[#2563EB] ">
+                  Upload Photo
+                </h1>
+                <p className="text-[12px] text-[#9CA3AF] ">
+                  An image of the person — best if it has the same light and
+                  height.
+                </p>
+              </div>
+            </div>
