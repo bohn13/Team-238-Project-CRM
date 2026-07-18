@@ -14,8 +14,7 @@ from schemas.appointments import (
 
 
 router = APIRouter(
-    prefix="/appointments",
-    tags=["Appointments"],
+    tags=["appointments"],
 )
 
 
@@ -135,3 +134,84 @@ async def delete_appointment(
         )
 
     await repository.delete(appointment)
+
+
+@router.patch(
+    "/{appointment_id}/confirm/",
+    response_model=AppointmentResponse,
+)
+async def confirm_appointment(
+    appointment_id: int,
+    db: AsyncSession = Depends(get_postgresql_db),
+):
+    repository = AppointmentRepository(db)
+
+    appointment = await repository.get_by_id(appointment_id)
+
+    if appointment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found.",
+        )
+
+    try:
+        return await repository.confirm(appointment)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+
+@router.patch(
+    "/{appointment_id}/cancel/",
+    response_model=AppointmentResponse,
+)
+async def cancel_appointment(
+    appointment_id: int,
+    db: AsyncSession = Depends(get_postgresql_db),
+):
+    repository = AppointmentRepository(db)
+
+    appointment = await repository.get_by_id(appointment_id)
+
+    if appointment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found.",
+        )
+
+    try:
+        return await repository.cancel(appointment)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+
+
+@router.patch(
+    "/{appointment_id}/restore/",
+    response_model=AppointmentResponse,
+)
+async def restore_appointment(
+    appointment_id: int,
+    db: AsyncSession = Depends(get_postgresql_db),
+):
+    repository = AppointmentRepository(db)
+
+    appointment = await repository.get_by_id(appointment_id)
+
+    if appointment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found.",
+        )
+
+    try:
+        return await repository.restore(appointment)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error

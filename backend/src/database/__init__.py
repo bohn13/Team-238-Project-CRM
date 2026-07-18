@@ -1,4 +1,8 @@
 from database.models.base import Base
+from database.models.appointments import (
+    AppointmentModel,
+    AppointmentStatusEnum,
+)
 from database.models.doctors import DoctorEmploymentTypeEnum, DoctorModel
 from database.models.patient import PatientGenderEnum, PatientModel
 from database.models.users import (
@@ -36,4 +40,6 @@ __all__ = [
     "str_null_true",
     "str_uniq",
     "users_validators",
+    "AppointmentModel",
+    "AppointmentStatusEnum",
 ]

@@ -16,6 +16,12 @@ class AppointmentStatusEnum(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class AppointmentChannelEnum(str, enum.Enum):
+    WALK_IN = "walk_in"
+    PHONE_CALL = "phone_call"
+    MESSAGE = "message"
+
+
 class AppointmentModel(Base):
     __tablename__ = "appointments"
 
@@ -75,6 +81,11 @@ class AppointmentModel(Base):
         String(30),
         nullable=False,
         default=AppointmentStatusEnum.SCHEDULED,
+    )
+
+    channel: Mapped[AppointmentChannelEnum | None] = mapped_column(
+        String(30),
+        nullable=True,
     )
 
     patient = relationship("PatientModel")

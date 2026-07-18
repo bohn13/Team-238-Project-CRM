@@ -36,9 +36,7 @@ class AppointmentRepository:
         )
 
         if exclude_appointment_id is not None:
-            query = query.where(
-                AppointmentModel.id != exclude_appointment_id
-            )
+            query = query.where(AppointmentModel.id != exclude_appointment_id)
 
         result = await self.db.execute(query)
 
@@ -59,15 +57,12 @@ class AppointmentRepository:
         )
 
         if doctor_busy:
-            raise ValueError(
-                "Doctor already has an appointment during this time."
-            )
+            raise ValueError("Doctor already has an appointment during this time.")
 
-        appointment = AppointmentModel(
-            **appointment_values,
-            duration=duration,
-            status=AppointmentStatusEnum.SCHEDULED,
-        )
+        appointment_values["duration"] = duration
+        appointment_values["status"] = AppointmentStatusEnum.SCHEDULED
+
+        appointment = AppointmentModel(**appointment_values)
 
         self.db.add(appointment)
         await self.db.commit()
@@ -87,14 +82,10 @@ class AppointmentRepository:
         query = select(AppointmentModel)
 
         if doctor_id is not None:
-            query = query.where(
-                AppointmentModel.doctor_id == doctor_id
-            )
+            query = query.where(AppointmentModel.doctor_id == doctor_id)
 
         if patient_id is not None:
-            query = query.where(
-                AppointmentModel.patient_id == patient_id
-            )
+            query = query.where(AppointmentModel.patient_id == patient_id)
 
         if appointment_date is not None:
             day_start = datetime.combine(
@@ -109,16 +100,9 @@ class AppointmentRepository:
             )
 
         if appointment_status is not None:
-            query = query.where(
-                AppointmentModel.status == appointment_status
-            )
+            query = query.where(AppointmentModel.status == appointment_status)
 
-        query = (
-            query
-            .order_by(AppointmentModel.date_time)
-            .offset(offset)
-            .limit(limit)
-        )
+        query = query.order_by(AppointmentModel.date_time).offset(offset).limit(limit)
 
         result = await self.db.execute(query)
 
@@ -129,9 +113,7 @@ class AppointmentRepository:
         appointment_id: int,
     ) -> AppointmentModel | None:
         result = await self.db.execute(
-            select(AppointmentModel).where(
-                AppointmentModel.id == appointment_id
-            )
+            select(AppointmentModel).where(AppointmentModel.id == appointment_id)
         )
 
         return result.scalar_one_or_none()
@@ -141,9 +123,7 @@ class AppointmentRepository:
         appointment: AppointmentModel,
         appointment_data: AppointmentUpdate,
     ) -> AppointmentModel:
-        update_data = appointment_data.model_dump(
-            exclude_unset=True
-        )
+        update_data = appointment_data.model_dump(exclude_unset=True)
 
         new_doctor_id = update_data.get(
             "doctor_id",
@@ -166,12 +146,28 @@ class AppointmentRepository:
         )
 
         if doctor_busy:
-            raise ValueError(
-                "Doctor already has an appointment during this time."
-            )
+            raise ValueError("Doctor already has an appointment during this time.")
 
         for field, value in update_data.items():
             setattr(appointment, field, value)
+
+        await self.db.commit()
+        await self.db.refresh(appointment)
+
+        return appointment
+
+    async def confirm(
+        self,
+        appointment: AppointmentModel,
+    ) -> AppointmentModel:
+
+        if appointment.status == AppointmentStatusEnum.CANCELLED:
+            raise ValueError("Cancelled appointment cannot be confirmed.")
+
+        if appointment.status == AppointmentStatusEnum.CONFIRMED:
+            raise ValueError("Appointment is already confirmed.")
+
+        appointment.status = AppointmentStatusEnum.CONFIRMED
 
         await self.db.commit()
         await self.db.refresh(appointment)
@@ -182,6 +178,12 @@ class AppointmentRepository:
         self,
         appointment: AppointmentModel,
     ) -> AppointmentModel:
+        if appointment.status == AppointmentStatusEnum.CANCELLED:
+            raise ValueError("Appointment is already cancelled.")
+
+        if appointment.status == AppointmentStatusEnum.COMPLETED:
+            raise ValueError("Completed appointment cannot be cancelled.")
+
         appointment.status = AppointmentStatusEnum.CANCELLED
 
         await self.db.commit()
@@ -195,3 +197,27 @@ class AppointmentRepository:
     ) -> None:
         await self.db.delete(appointment)
         await self.db.commit()
+
+    async def restore(
+        self,
+        appointment: AppointmentModel,
+    ) -> AppointmentModel:
+        if appointment.status != AppointmentStatusEnum.CANCELLED:
+            raise ValueError("Only cancelled appointment can be restored.")
+
+        is_busy = await self.is_doctor_busy(
+            doctor_id=appointment.doctor_id,
+            date_time=appointment.date_time,
+            duration=appointment.duration,
+            exclude_appointment_id=appointment.id,
+        )
+
+        if is_busy:
+            raise ValueError("Doctor already has an appointment during this time.")
+
+        appointment.status = AppointmentStatusEnum.SCHEDULED
+
+        await self.db.commit()
+        await self.db.refresh(appointment)
+
+        return appointment
