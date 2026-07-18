@@ -45,7 +45,6 @@ services:
       - PYTHONPATH=/app/src
       - WATCHFILES_FORCE_POLLING=true
       - POSTGRES_HOST=db
-      - S3_STORAGE_URL=http://minio:9000
       - MINIO_URL=http://minio:9000
     ports:
       - "8000:8000"

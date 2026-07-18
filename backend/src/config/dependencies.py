@@ -42,7 +42,6 @@ def get_s3_storage_client(
 ) -> S3StorageInterface:
     return S3StorageClient(
         endpoint_url=settings.s3_storage_endpoint,
-        public_url=settings.S3_PUBLIC_URL,
         access_key=settings.S3_STORAGE_ACCESS_KEY,
         secret_key=settings.S3_STORAGE_SECRET_KEY,
         bucket_name=settings.S3_BUCKET_NAME,

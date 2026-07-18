@@ -40,7 +40,6 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "clinic@mail.com"
 
     S3_STORAGE_URL: str = "http://minio:9000"
-    S3_PUBLIC_URL: str = "http://localhost:9000/clinic-storage"
     S3_STORAGE_ACCESS_KEY: str = "minio_admin"
     S3_STORAGE_SECRET_KEY: str = "minio_password"
     S3_BUCKET_NAME: str = "clinic-storage"

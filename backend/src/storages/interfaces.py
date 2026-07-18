@@ -7,5 +7,11 @@ class S3StorageInterface(ABC):
         pass
 
     @abstractmethod
-    async def get_file_url(self, file_name: str) -> str:
+    async def delete_file(self, file_name: str) -> None:
+        pass
+
+    @abstractmethod
+    async def generate_presigned_url(
+        self, file_name: str, expires_in: int = 900
+    ) -> str:
         pass
