@@ -1,6 +1,5 @@
 import enum
-from datetime import date
-
+from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
@@ -9,10 +8,20 @@ class PatientGenderEnum(str, enum.Enum):
     FEMALE = "female"
 
 
+class PatientSourceEnum(str, enum.Enum):
+    GOOGLE_SEARCH = "google_search"
+    SOCIAL_MEDIA = "social_media"
+    RECOMMENDATION = "recommendation"
+    OUTDOOR_AD = "outdoor_ad"
+    WEBSITE = "website"
+    OTHER = "other"
+
+
 class PatientBase(BaseModel):
     gender: PatientGenderEnum | None = None
     date_of_birth: date | None = None
     address: str | None = None
+    source: PatientSourceEnum | None = None
 
     @field_validator("date_of_birth")
     @classmethod
@@ -46,4 +55,5 @@ class PatientListResponse(BaseModel):
     last_name: str
     phone_number: str | None
     date_of_birth: date | None
-    # last_visit_date: date | None = None
+    source: PatientSourceEnum | None = None
+    last_visit_date: datetime | None = None

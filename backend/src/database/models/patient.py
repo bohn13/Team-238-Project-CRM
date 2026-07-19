@@ -18,6 +18,15 @@ class PatientGenderEnum(str, enum.Enum):
     FEMALE = "female"
 
 
+class PatientSourceEnum(str, enum.Enum):
+    GOOGLE_SEARCH = "google_search"
+    SOCIAL_MEDIA = "social_media"
+    RECOMMENDATION = "recommendation"
+    OUTDOOR_AD = "outdoor_ad"
+    WEBSITE = "website"
+    OTHER = "other"
+
+
 class PatientModel(Base):
     __tablename__ = "patients"
 
@@ -30,5 +39,9 @@ class PatientModel(Base):
     gender: Mapped[PatientGenderEnum | None] = mapped_column(String(20))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
     address: Mapped[str | None] = mapped_column(String(255))
+    source: Mapped[PatientSourceEnum | None] = mapped_column(
+        String(30),
+        nullable=True,
+    )
 
     user: Mapped[UserModel] = relationship(back_populates="patient")
