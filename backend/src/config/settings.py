@@ -1,4 +1,3 @@
-import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -21,8 +20,8 @@ class Settings(BaseSettings):
     POSTGRES_DB_PORT: int = 5432
     POSTGRES_DB: str = "clinic_db"
 
-    SECRET_KEY_ACCESS: str = os.getenv("SECRET_KEY_ACCESS", "change-me-access")
-    SECRET_KEY_REFRESH: str = os.getenv("SECRET_KEY_REFRESH", "change-me-refresh")
+    SECRET_KEY_ACCESS: str = "change-me-access"
+    SECRET_KEY_REFRESH: str = "change-me-refresh"
     JWT_SIGNING_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     LOGIN_TIME_DAYS: int = 7
@@ -35,12 +34,12 @@ class Settings(BaseSettings):
 
     EMAIL_HOST: str = "mailhog"
     EMAIL_PORT: int = 1025
-    EMAIL_HOST_USER: str = "clinic@example.com"
-    EMAIL_HOST_PASSWORD: str = "clinic"
+    EMAIL_HOST_USER: str = "clinic@mail.com"
+    EMAIL_HOST_PASSWORD: str = ""
     EMAIL_USE_TLS: bool = False
+    EMAIL_FROM: str = "clinic@mail.com"
 
     S3_STORAGE_URL: str = "http://minio:9000"
-    S3_PUBLIC_URL: str = "http://localhost:9000/clinic-storage"
     S3_STORAGE_ACCESS_KEY: str = "minio_admin"
     S3_STORAGE_SECRET_KEY: str = "minio_password"
     S3_BUCKET_NAME: str = "clinic-storage"

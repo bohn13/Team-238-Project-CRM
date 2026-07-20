@@ -15,6 +15,7 @@ class EmailSender(EmailSenderInterface):
         hostname: str,
         port: int,
         email: str,
+        email_from: str,
         password: str,
         use_tls: bool,
         template_dir: str,
@@ -26,6 +27,7 @@ class EmailSender(EmailSenderInterface):
         self._hostname = hostname
         self._port = port
         self._email = email
+        self._email_from = email_from
         self._password = password
         self._use_tls = use_tls
         self._activation_email_template_name = activation_email_template_name
@@ -45,7 +47,7 @@ class EmailSender(EmailSenderInterface):
         self, recipient: str, subject: str, html_content: str
     ) -> None:
         message = MIMEMultipart()
-        message["From"] = self._email
+        message["From"] = self._email_from
         message["To"] = recipient
         message["Subject"] = subject
         message.attach(MIMEText(html_content, "html"))
@@ -57,7 +59,7 @@ class EmailSender(EmailSenderInterface):
             await smtp.connect()
             if self._password:
                 await smtp.login(self._email, self._password)
-            await smtp.sendmail(self._email, [recipient], message.as_string())
+            await smtp.sendmail(self._email_from, [recipient], message.as_string())
             await smtp.quit()
         except aiosmtplib.SMTPException as error:
             logging.exception("Failed to send email to %s", recipient)

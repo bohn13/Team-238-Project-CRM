@@ -26,6 +26,7 @@ def get_accounts_email_notificator(
         hostname=settings.EMAIL_HOST,
         port=settings.EMAIL_PORT,
         email=settings.EMAIL_HOST_USER,
+        email_from=settings.EMAIL_FROM,
         password=settings.EMAIL_HOST_PASSWORD,
         use_tls=settings.EMAIL_USE_TLS,
         template_dir=settings.PATH_TO_EMAIL_TEMPLATES_DIR,
@@ -41,7 +42,6 @@ def get_s3_storage_client(
 ) -> S3StorageInterface:
     return S3StorageClient(
         endpoint_url=settings.s3_storage_endpoint,
-        public_url=settings.S3_PUBLIC_URL,
         access_key=settings.S3_STORAGE_ACCESS_KEY,
         secret_key=settings.S3_STORAGE_SECRET_KEY,
         bucket_name=settings.S3_BUCKET_NAME,
