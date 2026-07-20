@@ -1,62 +1,92 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models.users import UserModel
+
+from database.models.appointments import (
+    AppointmentModel,
+    AppointmentStatusEnum,
+)
 from database.models.patient import PatientModel
-from schemas.patients import PatientCreate, PatientUpdate
+from database.models.users import UserModel
+from schemas.patients import PatientUpdate
 
 
-async def create_patient(
-    db: AsyncSession,
-    patient_data: PatientCreate,
-) -> PatientModel:
-    patient = PatientModel(**patient_data.model_dump())
-    db.add(patient)
-    await db.commit()
-    await db.refresh(patient)
-    return patient
+class PatientRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
 
+    def add(self, patient: PatientModel) -> None:
+        self.session.add(patient)
 
-async def get_patients(db: AsyncSession) -> list[dict]:
-    result = await db.execute(
-        select(
-            PatientModel.id,
-            PatientModel.user_id,
-            UserModel.first_name,
-            UserModel.last_name,
-            UserModel.phone_number,
-            PatientModel.date_of_birth,
-        ).join(UserModel, PatientModel.user_id == UserModel.id)
-    )
+    async def get_by_id(
+        self,
+        patient_id: int,
+    ) -> PatientModel | None:
+        return await self.session.scalar(
+            select(PatientModel).where(PatientModel.id == patient_id)
+        )
 
-    return [dict(row._mapping) for row in result.all()]
+    async def get_by_user_id(
+        self,
+        user_id: int,
+    ) -> PatientModel | None:
+        return await self.session.scalar(
+            select(PatientModel).where(PatientModel.user_id == user_id)
+        )
 
+    async def get_all(self) -> list[dict]:
+        last_visit_subquery = (
+            select(
+                AppointmentModel.patient_id,
+                func.max(AppointmentModel.date_time).label("last_visit_date"),
+            )
+            .where(AppointmentModel.status == AppointmentStatusEnum.COMPLETED)
+            .group_by(AppointmentModel.patient_id)
+            .subquery()
+        )
 
-async def get_patient_by_id(
-    db: AsyncSession,
-    patient_id: int,
-) -> PatientModel | None:
-    result = await db.execute(select(PatientModel).where(PatientModel.id == patient_id))
-    return result.scalar_one_or_none()
+        statement = (
+            select(
+                PatientModel.id,
+                PatientModel.user_id,
+                UserModel.first_name,
+                UserModel.last_name,
+                UserModel.phone_number,
+                PatientModel.date_of_birth,
+                PatientModel.source,
+                last_visit_subquery.c.last_visit_date,
+            )
+            .join(
+                UserModel,
+                PatientModel.user_id == UserModel.id,
+            )
+            .outerjoin(
+                last_visit_subquery,
+                last_visit_subquery.c.patient_id == PatientModel.id,
+            )
+            .order_by(
+                UserModel.last_name,
+                UserModel.first_name,
+            )
+        )
 
+        result = await self.session.execute(statement)
 
-async def update_patient(
-    db: AsyncSession,
-    patient: PatientModel,
-    patient_data: PatientUpdate,
-) -> PatientModel:
-    update_data = patient_data.model_dump(exclude_unset=True)
+        return [dict(row._mapping) for row in result.all()]
 
-    for field, value in update_data.items():
-        setattr(patient, field, value)
+    def update(
+        self,
+        patient: PatientModel,
+        patient_data: PatientUpdate,
+    ) -> PatientModel:
+        update_data = patient_data.model_dump(exclude_unset=True)
 
-    await db.commit()
-    await db.refresh(patient)
-    return patient
+        for field, value in update_data.items():
+            setattr(patient, field, value)
 
+        return patient
 
-async def delete_patient(
-    db: AsyncSession,
-    patient: PatientModel,
-) -> None:
-    await db.delete(patient)
-    await db.commit()
+    async def delete(
+        self,
+        patient: PatientModel,
+    ) -> None:
+        await self.session.delete(patient)

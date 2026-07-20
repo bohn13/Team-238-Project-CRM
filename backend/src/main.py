@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
-from routes import accounts_router, doctors_router, patients_router
+from routes import accounts_router, doctors_router, patients_router, appointments_router
+
 
 settings = get_settings()
 
@@ -19,16 +20,21 @@ app = FastAPI(
             "name": "doctors",
             "description": "Doctor profiles and avatars.",
         },
+        {
+            "name": "patients",
+            "description": "Patient profiles.",
+        },
+        {
+            "name": "appointments",
+            "description": "Appointments.",
+        },
     ],
 )
 
 app.include_router(accounts_router, prefix="/accounts", tags=["accounts"])
+app.include_router(appointments_router, prefix="/appointments", tags=["appointments"])
 app.include_router(doctors_router, prefix="/doctors", tags=["doctors"])
-app.include_router(
-    patients_router,
-    prefix="/api/patients",
-    tags=["Patients"],
-)
+app.include_router(patients_router, prefix="/patients", tags=["patients"])
 
 origins = [settings.FRONTEND_BASE_URL]
 

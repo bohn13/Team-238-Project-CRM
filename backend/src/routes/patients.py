@@ -2,13 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.session_postgresql import get_postgresql_db
-from repositories.patients import (
-    create_patient,
-    delete_patient,
-    get_patient_by_id,
-    get_patients,
-    update_patient,
-)
+from exceptions import DatabaseWriteError
 from schemas.patients import (
     PatientCreate,
     PatientListResponse,
@@ -16,75 +10,120 @@ from schemas.patients import (
     PatientUpdate,
 )
 from security.permissions import DoctorAdminOrSuperAdminDep
+from services.patients import PatientService
 
 
 router = APIRouter()
 
 
-@router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
-async def create_patient_route(
+@router.post(
+    "/",
+    response_model=PatientResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_patient(
     patient_data: PatientCreate,
     current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
-):
-    return await create_patient(db, patient_data)
+) -> PatientResponse:
+    service = PatientService(db)
+
+    try:
+        return await service.create_profile(patient_data)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    except DatabaseWriteError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
 
 
-@router.get("/", response_model=list[PatientListResponse])
-async def get_patients_route(
+@router.get(
+    "/",
+    response_model=list[PatientListResponse],
+)
+async def get_patients(
     current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
-):
-    return await get_patients(db)
+) -> list[PatientListResponse]:
+    service = PatientService(db)
+
+    return await service.get_all()
 
 
-@router.get("/{patient_id}", response_model=PatientResponse)
-async def get_patient_route(
+@router.get(
+    "/{patient_id}/",
+    response_model=PatientResponse,
+)
+async def get_patient(
     patient_id: int,
     current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
-):
-    patient = await get_patient_by_id(db, patient_id)
+) -> PatientResponse:
+    service = PatientService(db)
 
-    if patient is None:
+    try:
+        return await service.get_by_id(patient_id)
+    except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient not found",
-        )
-
-    return patient
+            detail=str(error),
+        ) from error
 
 
-@router.patch("/{patient_id}", response_model=PatientResponse)
-async def update_patient_route(
+@router.patch(
+    "/{patient_id}/",
+    response_model=PatientResponse,
+)
+async def update_patient(
     patient_id: int,
     patient_data: PatientUpdate,
     current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
-):
-    patient = await get_patient_by_id(db, patient_id)
+) -> PatientResponse:
+    service = PatientService(db)
 
-    if patient is None:
+    try:
+        return await service.update_profile(
+            patient_id=patient_id,
+            patient_data=patient_data,
+        )
+    except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient not found",
-        )
+            detail=str(error),
+        ) from error
+    except DatabaseWriteError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
 
-    return await update_patient(db, patient, patient_data)
 
-
-@router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_patient_route(
+@router.delete(
+    "/{patient_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_patient(
     patient_id: int,
     current_user: DoctorAdminOrSuperAdminDep,
     db: AsyncSession = Depends(get_postgresql_db),
-):
-    patient = await get_patient_by_id(db, patient_id)
+) -> None:
+    service = PatientService(db)
 
-    if patient is None:
+    try:
+        await service.delete_profile(patient_id)
+    except ValueError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient not found",
-        )
-
-    await delete_patient(db, patient)
+            detail=str(error),
+        ) from error
+    except DatabaseWriteError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(error),
+        ) from error
