@@ -1,10 +1,10 @@
 export const employmentTypes = [
   {
-    value: "full_time",
+    value: "full-time",
     label: "Full-time",
   },
   {
-    value: "part_time",
+    value: "part-time",
     label: "Part-time",
   },
 ];

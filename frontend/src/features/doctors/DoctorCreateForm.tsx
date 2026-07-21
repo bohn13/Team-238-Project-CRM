@@ -35,30 +35,63 @@ export const DoctorCreteForm: React.FC<Props> = ({ handleAside }) => {
     setValue("email", selectedUser.email);
   }, [selectedUser, setValue]);
 
-  const onSubmit = async (data: DoctorFormData) => {
-    if (!selectedUser) {
-      return;
-    }
-    try {
-      await dispatch(
-        createDoctorThunk({
-          ...data,
-          userId: selectedUser.id,
-        }),
-      ).unwrap();
-      await dispatch(getAllDoctorsThunk(query)).unwrap();
-      reset();
-      successToast(
-        <>
-          Doctor created successfully
-          <br />
-          Dr. {selectedUser.firstName} {selectedUser.lastName}
-        </>,
-      );
-    } catch (e) {
-      errorToast(e as string);
-    }
-  };
+ const onSubmit = async (data: DoctorFormData) => {
+  if (!selectedUser) {
+    return;
+  }
+
+  const formData = new FormData();
+
+  formData.append("user_id", String(selectedUser.id));
+  formData.append("specialization", data.specialization);
+
+  if (data.yearsExperience !== undefined) {
+    formData.append(
+      "years_experience",
+      String(data.yearsExperience),
+    );
+  }
+
+  if (data.employmentType) {
+    formData.append(
+      "employment_type",
+      data.employmentType,
+    );
+  }
+if (data.phoneNumber) {
+    formData.append(
+      "phone_number",
+      String(data.phoneNumber),
+  )
+  data.workingDays.forEach((day) => {
+  formData.append("working_days", day);
+})
+  }
+  if (data.avatar?.length) {
+    formData.append("avatar", data.avatar[0]);
+   }
+   for (const [key, value] of formData.entries()) {
+  console.log(key, value);
+}
+
+  try {
+    await dispatch(createDoctorThunk(formData)).unwrap();
+
+    await dispatch(getAllDoctorsThunk(query)).unwrap();
+
+    reset();
+
+    successToast(
+      <>
+        Doctor created successfully
+        <br />
+        Dr. {selectedUser.firstName} {selectedUser.lastName}
+      </>,
+    );
+  } catch (e) {
+    errorToast(e as string);
+  }
+};
 
   return (
     <>
@@ -66,8 +99,11 @@ export const DoctorCreteForm: React.FC<Props> = ({ handleAside }) => {
       {doctorsLoading ? (
         <Loader />
       ) : (
-        <div className="w-full">
-          <section>
+          <div className="w-full">
+            <section>
+
+            </section>
+          <section className="mb-[24px]">
             <Search
               items={users}
               placeholder="Find an activated user"
@@ -87,7 +123,8 @@ export const DoctorCreteForm: React.FC<Props> = ({ handleAside }) => {
               )}
             />
           </section>
-          <FormProvider {...methods}>
+         
+            <FormProvider {...methods}>
             <form
               className="flex flex-col gap-6"
               onSubmit={handleSubmit(onSubmit)}

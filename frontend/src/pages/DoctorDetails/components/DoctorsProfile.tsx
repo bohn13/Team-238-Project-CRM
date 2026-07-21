@@ -1,8 +1,12 @@
+import type { Doctor } from "@/types/doctor"
 
-export const DoctorsProfile = ({ selectedDoctor }) => {
+type Props = {
+  selectedDoctor:Doctor
+}
+export const DoctorsProfile:React.FC<Props> = ({ selectedDoctor }) => {
   return (<>  <div className="flex items-center gap-5">
             <img
-              src="/favicon.svg"
+              src={selectedDoctor.avatarUrl ?? undefined}
               alt="Doctor"
               className="h-20 w-20 rounded-full bg-amber-300 object-cover"
             />

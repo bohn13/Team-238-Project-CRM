@@ -1,16 +1,17 @@
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
-import type { DoctorFormData } from "@/types/dotorFormData";
 import { getErrorMessage } from "@/features/errors/getError";
 import { doctorsService } from "@/services/doctorService";
+import type { Doctor } from "@/types/doctor";
 
-export const createDoctorThunk = createAsyncThunk(
-  "doctors/profile",
-  async (data:DoctorFormData, thunkApi) => {
+export const createDoctorThunk = createAsyncThunk<Doctor, FormData>(
+  "doctors/profiles",
+  async (data, thunkApi) => {
     
     try {
-      await doctorsService.createDoctor(data)
+  
+     return await doctorsService.createDoctor(data)
     } catch (e) {
       return thunkApi.rejectWithValue(getErrorMessage(e))
 

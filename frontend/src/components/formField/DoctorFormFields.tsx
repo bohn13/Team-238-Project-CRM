@@ -11,6 +11,7 @@ import { formValidation } from "@/features/auth/model/form.validation";
 import { specializations } from "@/features/doctors/model/specialties";
 import { employmentTypes } from "@/features/doctors/model/employmentTypes";
 import { workingDays } from "@/features/doctors/model/workingDays";
+import { UploadAvatar } from "../uploadAvatar/UploadAvatar";
 type Props = {
   type?: 'create'
 }
@@ -24,6 +25,10 @@ export const DoctorFormFields:React.FC<Props> = ({type}) => {
   return (
     <>
       <section>
+        <UploadAvatar/>
+     
+
+
         <p className="mb-6 text-xs text-[#6B7280]">
           PERSONAL INFO
         </p>
@@ -107,13 +112,13 @@ export const DoctorFormFields:React.FC<Props> = ({type}) => {
 
       <section>
         <Input
-          name="phone"
+          name="phoneNumber"
           label="Phone *"
           type="tel"
           placeholder="+38 (0XX) XXX-XXXX"
           register={register}
           rules={formValidation.phone}
-          error={errors.phone?.message}
+          error={errors.phoneNumber?.message}
         />
       </section>
 

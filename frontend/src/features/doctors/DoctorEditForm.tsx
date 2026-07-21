@@ -5,7 +5,7 @@ import { Loader } from "@/components/loader/Loader";
 import { errorToast, successToast } from "@/components/pushAppMessage/PushApp";
 import type { DoctorFormData } from "@/types/dotorFormData";
 import { DoctorFormFields } from "@/components/formField/DoctorFormFields";
-import { setSelectedDoctor } from "./doctorsSlice";
+
 
 import { useParams } from "react-router-dom";
 import { useEffect } from "react";
@@ -32,7 +32,7 @@ export const DoctorEditForm: React.FC<Props> = ({ handleAside }) => {
       firstName: selectedDoctor.firstName,
       lastName: selectedDoctor.lastName,
       email: selectedDoctor.email,
-      phone: selectedDoctor.phoneNumber,
+      phoneNumber: selectedDoctor.phoneNumber,
       specialization: selectedDoctor.specialization,
       yearsExperience: selectedDoctor.yearsExperience,
       employmentType: selectedDoctor.employmentType,
@@ -44,14 +44,51 @@ export const DoctorEditForm: React.FC<Props> = ({ handleAside }) => {
     if (!selectedDoctor) {
       return;
     }
+    const formData = new FormData();
+    
+    formData.append("specialization", data.specialization);
+    formData.append("first_name", data.firstName)
+    formData.append("last_name", data.lastName)
+  if (data.yearsExperience !== undefined) {
+    formData.append(
+      "years_experience",
+      String(data.yearsExperience),
+    );
+  }
+
+  if (data.employmentType) {
+    formData.append(
+      "employment_type",
+      data.employmentType,
+    );
+  }
+if (data.phoneNumber) {
+    formData.append(
+      "phone_number",
+      String(data.phoneNumber),
+  )
+ 
+    }
+//      data.workingDays.forEach((day) => {
+//   formData.append("working_days", day);
+// })
+    
+    
+  if (data.avatar?.length) {
+    formData.append("avatar", data.avatar[0]);
+   }
+  
     try {
-      await dispatch(updateDoctorThunk({ id: doctorId, data })).unwrap();
+      await dispatch(updateDoctorThunk({
+        id: doctorId,
+        data: formData,
+      })).unwrap();
       reset();
       successToast(
         <>
           Doctor updates successfully
           <br />
-          Dr. {setSelectedDoctor.firstName} {setSelectedDoctor.lastName}
+          Dr. {selectedDoctor.firstName} {selectedDoctor.lastName}
         </>,
       );
     } catch (e) {

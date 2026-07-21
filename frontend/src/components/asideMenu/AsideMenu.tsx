@@ -1,6 +1,6 @@
 
 import { TfiClose } from "react-icons/tfi";
-import { Toaster } from "react-hot-toast";
+
 type Props = {
   title: string;
   description: string;

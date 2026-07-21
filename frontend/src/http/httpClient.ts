@@ -18,9 +18,9 @@ httpClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  if (config.data) {
-    config.data = humps.decamelizeKeys(config.data);
-  }
+  if (config.data && !(config.data instanceof FormData)) {
+  config.data = humps.decamelizeKeys(config.data);
+}
 
   if (config.params) {
     config.params = humps.decamelizeKeys(config.params);

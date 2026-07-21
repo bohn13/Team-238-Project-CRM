@@ -1,6 +1,6 @@
 import type { DoctorQuery } from "@/features/doctors/model/DoctorQuery";
 import { httpClient } from "@/http/httpClient"
-import type { DoctorFormData } from "@/types/dotorFormData";
+
 import { accessTokenService } from "./accessTokenService";
 
 export const doctorsService = {
@@ -35,7 +35,7 @@ export const doctorsService = {
   },
 
    createDoctor: async(
-     data:DoctorFormData
+     data:FormData
     ) => {
       const response = await httpClient.post(
         "doctors/profile",
@@ -50,8 +50,7 @@ export const doctorsService = {
   },
    
   updateDoctor: async(
-  id: string,
-  data: DoctorFormData
+  data:FormData,id:string
 ) => {
   const response = await httpClient.patch(
     `doctors/${id}/profile`,

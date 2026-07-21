@@ -37,7 +37,7 @@ export const DoctorsPage = () => {
 
     fetchDoctors();
   }, [dispatch, query]);
-  console.log(doctors);
+  
 
   const handleAside = () => setOpenAside((prev) => !prev);
   return (
@@ -127,6 +127,7 @@ export const DoctorsPage = () => {
 
                   <Td>
                     <UserContacts
+                      avatar = {doctor.avatarUrl}
                       firstName={doctor.firstName}
                       lastName={doctor.lastName}
                       phone={doctor.phoneNumber}

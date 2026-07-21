@@ -3,9 +3,10 @@
     firstName: string;
     lastName: string;
     email: string;
-    phone: number;
+    phoneNumber: number;
     yearsExperience: number;
     specialization: string;
     employmentType: string;
     workingDays: string[];
+    avatar?: FileList;
   };
