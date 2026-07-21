@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import DoctorEmploymentTypeEnum, DoctorModel, UserModel, UserRoleEnum
 from exceptions import (
+    BaseS3StorageError,
     DatabaseWriteError,
     DoctorProfileAlreadyExistsError,
     DoctorProfileNotFoundError,
@@ -33,14 +34,14 @@ class DoctorService:
 
     async def create_profile(
         self,
-        current_user: UserModel,
         user_id: int,
         specialization: str,
         years_experience: int | None = None,
         employment_type: DoctorEmploymentTypeEnum | None = None,
+        avatar_file_data: bytes | None = None,
+        avatar_content_type: str | None = None,
+        storage: S3StorageInterface | None = None,
     ) -> dict:
-        self._ensure_can_manage_profile(current_user=current_user, user_id=user_id)
-
         user = await self.users.get_by_id(user_id)
         if not user:
             raise UserNotFoundError
@@ -61,7 +62,20 @@ class DoctorService:
         try:
             user.role = UserRoleEnum.DOCTOR
             self.doctors.add(doctor)
+            await self.session.flush()
+            if avatar_file_data is not None:
+                if storage is None:
+                    raise InvalidDoctorAvatarError
+                doctor.avatar_url = await self._upload_avatar_file(
+                    doctor=doctor,
+                    file_data=avatar_file_data,
+                    content_type=avatar_content_type,
+                    storage=storage,
+                )
             await self.session.commit()
+        except BaseS3StorageError:
+            await self.session.rollback()
+            raise
         except SQLAlchemyError as error:
             await self.session.rollback()
             raise DatabaseWriteError(
@@ -71,22 +85,13 @@ class DoctorService:
         created_doctor = await self.doctors.get_by_user_id(user_id)
         if not created_doctor:
             raise DoctorProfileNotFoundError
-        return self._serialize_doctor(created_doctor)
+        return await self._serialize_doctor(created_doctor, storage=storage)
 
-    async def get_profile(self, current_user: UserModel, doctor_id: int) -> dict:
-        doctor = await self.doctors.get_by_id(doctor_id)
-        if not doctor or not doctor.user.is_active:
-            raise DoctorProfileNotFoundError
-        self._ensure_can_manage_profile(
-            current_user=current_user, user_id=doctor.user_id
-        )
-        return self._serialize_doctor(doctor)
-
-    async def update_profile(
+    async def get_profile(
         self,
         current_user: UserModel,
         doctor_id: int,
-        data: dict,
+        storage: S3StorageInterface | None = None,
     ) -> dict:
         doctor = await self.doctors.get_by_id(doctor_id)
         if not doctor or not doctor.user.is_active:
@@ -94,9 +99,31 @@ class DoctorService:
         self._ensure_can_manage_profile(
             current_user=current_user, user_id=doctor.user_id
         )
+        return await self._serialize_doctor(
+            doctor,
+            storage=storage,
+        )
+
+    async def update_profile(
+        self,
+        current_user: UserModel,
+        doctor_id: int,
+        data: dict,
+        storage: S3StorageInterface | None = None,
+        avatar_file_data: bytes | None = None,
+        avatar_content_type: str | None = None,
+    ) -> dict:
+        doctor = await self.doctors.get_by_id(doctor_id)
+        if not doctor or not doctor.user.is_active:
+            raise DoctorProfileNotFoundError
+        self._ensure_can_manage_profile(
+            current_user=current_user,
+            user_id=doctor.user_id,
+        )
 
         user_fields = {"first_name", "last_name", "phone_number"}
         doctor_fields = {"specialization", "years_experience", "employment_type"}
+        old_avatar_key = doctor.avatar_url
 
         try:
             for field, value in data.items():
@@ -105,17 +132,38 @@ class DoctorService:
                 if field in doctor_fields:
                     setattr(doctor, field, value)
 
+            if avatar_file_data is not None:
+                if storage is None:
+                    raise InvalidDoctorAvatarError
+                doctor.avatar_url = await self._upload_avatar_file(
+                    doctor=doctor,
+                    file_data=avatar_file_data,
+                    content_type=avatar_content_type,
+                    storage=storage,
+                )
             await self.session.commit()
+        except BaseS3StorageError:
+            await self.session.rollback()
+            raise
         except SQLAlchemyError as error:
             await self.session.rollback()
             raise DatabaseWriteError(
                 "An error occurred while updating doctor profile."
             ) from error
 
+        await self._delete_old_avatar_file(
+            old_avatar_key=old_avatar_key,
+            current_avatar_key=doctor.avatar_url,
+            storage=storage,
+        )
+
         updated_doctor = await self.doctors.get_by_id(doctor_id)
         if not updated_doctor:
             raise DoctorProfileNotFoundError
-        return self._serialize_doctor(updated_doctor)
+        return await self._serialize_doctor(
+            updated_doctor,
+            storage=storage,
+        )
 
     async def upload_avatar(
         self,
@@ -129,39 +177,51 @@ class DoctorService:
         if not doctor or not doctor.user.is_active:
             raise DoctorProfileNotFoundError
         self._ensure_can_manage_profile(
-            current_user=current_user, user_id=doctor.user_id
+            current_user=current_user,
+            user_id=doctor.user_id,
         )
-
-        extension = self.allowed_avatar_content_types.get(content_type or "")
-        if (
-            not extension
-            or not file_data
-            or len(file_data) > self.max_avatar_size_bytes
-        ):
-            raise InvalidDoctorAvatarError
-
-        file_name = f"doctors/{doctor.id}/avatar-{uuid4().hex}.{extension}"
-        await storage.upload_file(file_name=file_name, file_data=file_data)
-        avatar_url = await storage.get_file_url(file_name)
+        old_avatar_key = doctor.avatar_url
 
         try:
-            doctor.avatar_url = avatar_url
+            doctor.avatar_url = await self._upload_avatar_file(
+                doctor=doctor,
+                file_data=file_data,
+                content_type=content_type,
+                storage=storage,
+            )
             await self.session.commit()
+        except BaseS3StorageError:
+            await self.session.rollback()
+            raise
         except SQLAlchemyError as error:
             await self.session.rollback()
             raise DatabaseWriteError(
                 "An error occurred while updating doctor avatar."
             ) from error
 
+        await self._delete_old_avatar_file(
+            old_avatar_key=old_avatar_key,
+            current_avatar_key=doctor.avatar_url,
+            storage=storage,
+        )
+
         updated_doctor = await self.doctors.get_by_id(doctor_id)
         if not updated_doctor:
             raise DoctorProfileNotFoundError
-        return self._serialize_doctor(updated_doctor)
+        return await self._serialize_doctor(
+            updated_doctor,
+            storage=storage,
+        )
 
-    async def delete_profile(self, doctor_id: int) -> str:
+    async def delete_profile(
+        self,
+        doctor_id: int,
+        storage: S3StorageInterface | None = None,
+    ) -> str:
         doctor = await self.doctors.get_by_id(doctor_id)
         if not doctor or not doctor.user.is_active:
             raise DoctorProfileNotFoundError
+        old_avatar_key = doctor.avatar_url
 
         try:
             doctor.user.role = UserRoleEnum.USER
@@ -172,6 +232,12 @@ class DoctorService:
             raise DatabaseWriteError(
                 "An error occurred while deleting doctor profile."
             ) from error
+
+        await self._delete_old_avatar_file(
+            old_avatar_key=old_avatar_key,
+            current_avatar_key=None,
+            storage=storage,
+        )
 
         return "Doctor profile deleted successfully."
 
@@ -184,6 +250,7 @@ class DoctorService:
         sort_order: str = "asc",
         page: int = 1,
         page_size: int = 20,
+        storage: S3StorageInterface | None = None,
     ) -> dict:
         offset = (page - 1) * page_size
         total = await self.doctors.count(
@@ -201,7 +268,13 @@ class DoctorService:
             limit=page_size,
         )
         return {
-            "items": [self._serialize_doctor(doctor) for doctor in doctors],
+            "items": [
+                await self._serialize_doctor(
+                    doctor,
+                    storage=storage,
+                )
+                for doctor in doctors
+            ],
             "total": total,
             "page": page,
             "page_size": page_size,
@@ -217,7 +290,51 @@ class DoctorService:
             return
         raise DoctorProfilePermissionError
 
-    def _serialize_doctor(self, doctor: DoctorModel) -> dict:
+    async def _upload_avatar_file(
+        self,
+        doctor: DoctorModel,
+        file_data: bytes,
+        content_type: str | None,
+        storage: S3StorageInterface,
+    ) -> str:
+        extension = self.allowed_avatar_content_types.get(content_type or "")
+        if (
+            not extension
+            or not file_data
+            or len(file_data) > self.max_avatar_size_bytes
+        ):
+            raise InvalidDoctorAvatarError
+
+        file_name = f"doctors/{doctor.id}/avatar-{uuid4().hex}.{extension}"
+        await storage.upload_file(file_name=file_name, file_data=file_data)
+        return file_name
+
+    async def _delete_old_avatar_file(
+        self,
+        old_avatar_key: str | None,
+        current_avatar_key: str | None,
+        storage: S3StorageInterface | None,
+    ) -> None:
+        if (
+            not old_avatar_key
+            or old_avatar_key == current_avatar_key
+            or storage is None
+        ):
+            return
+        try:
+            await storage.delete_file(old_avatar_key)
+        except BaseS3StorageError:
+            return
+
+    async def _serialize_doctor(
+        self,
+        doctor: DoctorModel,
+        storage: S3StorageInterface | None = None,
+    ) -> dict:
+        avatar_url = doctor.avatar_url
+        if avatar_url and storage:
+            avatar_url = await storage.generate_presigned_url(avatar_url)
+
         return {
             "id": doctor.id,
             "user_id": doctor.user_id,
@@ -229,7 +346,7 @@ class DoctorService:
             "specialization": doctor.specialization,
             "years_experience": doctor.years_experience,
             "employment_type": doctor.employment_type,
-            "avatar_url": doctor.avatar_url,
+            "avatar_url": avatar_url,
             "created_at": doctor.created_at,
             "updated_at": doctor.updated_at,
         }

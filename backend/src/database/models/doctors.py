@@ -11,8 +11,8 @@ from database.models.users import UserModel
 
 
 class DoctorEmploymentTypeEnum(str, enum.Enum):
-    FULL_TIME = "full_time"
-    PART_TIME = "part_time"
+    FULL_TIME = "full-time"
+    PART_TIME = "part-time"
 
 
 class DoctorModel(Base):

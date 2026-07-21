@@ -1,6 +1,9 @@
+from inspect import isawaitable
+
 import aioboto3
 from botocore.exceptions import (
     BotoCoreError,
+    ClientError,
     ConnectionError,
     HTTPClientError,
     NoCredentialsError,
@@ -14,14 +17,12 @@ class S3StorageClient(S3StorageInterface):
     def __init__(
         self,
         endpoint_url: str,
-        public_url: str,
         access_key: str,
         secret_key: str,
         bucket_name: str,
         region: str,
     ):
         self._endpoint_url = endpoint_url
-        self._public_url = public_url
         self._bucket_name = bucket_name
         self._region = region
         self._session = aioboto3.Session(
@@ -45,10 +46,52 @@ class S3StorageClient(S3StorageInterface):
             raise S3ConnectionError(
                 f"Failed to connect to S3 storage: {error}"
             ) from error
-        except BotoCoreError as error:
+        except (BotoCoreError, ClientError) as error:
             raise S3FileUploadError(
                 f"Failed to upload to S3 storage: {error}"
             ) from error
 
-    async def get_file_url(self, file_name: str) -> str:
-        return f"{self._public_url.rstrip('/')}/{file_name.lstrip('/')}"
+    async def delete_file(self, file_name: str) -> None:
+        try:
+            params = {"service_name": "s3", "region_name": self._region}
+            if self._endpoint_url:
+                params["endpoint_url"] = self._endpoint_url
+
+            async with self._session.client(**params) as client:
+                await client.delete_object(
+                    Bucket=self._bucket_name,
+                    Key=file_name,
+                )
+        except (ConnectionError, HTTPClientError, NoCredentialsError) as error:
+            raise S3ConnectionError(
+                f"Failed to connect to S3 storage: {error}"
+            ) from error
+        except (BotoCoreError, ClientError) as error:
+            raise S3FileUploadError(
+                f"Failed to delete from S3 storage: {error}"
+            ) from error
+
+    async def generate_presigned_url(
+        self, file_name: str, expires_in: int = 900
+    ) -> str:
+        params = {"service_name": "s3", "region_name": self._region}
+        if self._endpoint_url:
+            params["endpoint_url"] = self._endpoint_url
+        try:
+            async with self._session.client(**params) as client:
+                url = client.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": self._bucket_name, "Key": file_name},
+                    ExpiresIn=expires_in,
+                )
+                if isawaitable(url):
+                    return await url
+                return url
+        except (ConnectionError, HTTPClientError, NoCredentialsError) as error:
+            raise S3ConnectionError(
+                f"Failed to connect to S3 storage: {error}"
+            ) from error
+        except (BotoCoreError, ClientError) as error:
+            raise S3FileUploadError(
+                f"Failed to generate S3 presigned URL: {error}"
+            ) from error
