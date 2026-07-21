@@ -10,7 +10,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { DoctorsProfile } from "./components/DoctorsProfile";
 import { getDoctorByIdThunk } from "@/features/doctors/thunk/getDoctorByIdThunk";
 import { removeDoctorThunk } from "@/features/doctors/thunk/removeDoctorThunk";
-import { successToast } from "@/components/pushAppMessage/PushApp";
+import { errorToast, successToast } from "@/components/pushAppMessage/PushApp";
+import { Loader } from "@/components/loader/Loader";
+
 export const DoctorDetailsPage = () => {
   const dispatch = useAppDispatch();
   const [aside, setOpenAside] = useState(false);
@@ -23,15 +25,24 @@ export const DoctorDetailsPage = () => {
     if (!doctorId) return;
 
     dispatch(getDoctorByIdThunk(doctorId));
-  }, [dispatch, doctorId]);
+  }, [dispatch,doctorId]);
 
 
   const handleAside = () => setOpenAside((prev) => !prev);
+  
+  
   const handleRemove = async () => {
-    await dispatch(removeDoctorThunk(String(selectedDoctor.id))).unwrap();
-    navigate("/doctors");
-    successToast('Doctor remove')
-  };
+    
+    try {
+      await dispatch(removeDoctorThunk(Number(doctorId))).unwrap();
+      successToast('Doctor remove')
+      navigate("/doctors");
+    } catch (e) {
+      errorToast(e as string)
+    }
+    
+  }
+
   return (
     <>
       {aside && (
@@ -43,10 +54,10 @@ export const DoctorDetailsPage = () => {
         />
       )}
 
-      <div className="rounded-xl bg-white p-6 shadow-sm">
+      {loading? <Loader/>: <div className="rounded-xl bg-white p-6 shadow-sm">
         <section className="mb-8 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            <span className="cursor-pointer hover:text-blue-600">
+            <span className="cursor-pointer hover:text-blue-600" onClick={()=>navigate('/doctors')}>
               &lt; Doctors
             </span>
 
@@ -59,6 +70,7 @@ export const DoctorDetailsPage = () => {
 
           <div className="flex gap-3">
             <ButtonPage
+            
               className="bg-[#EF4444] px-4 hover:bg-black"
               icon={<IoTrash className="mr-2 text-white" />}
               onClick={ handleRemove}
@@ -81,7 +93,7 @@ export const DoctorDetailsPage = () => {
             <DoctorsProfile selectedDoctor={selectedDoctor} />
           )}
         </section>
-      </div>
+      </div>}
     </>
   );
 };

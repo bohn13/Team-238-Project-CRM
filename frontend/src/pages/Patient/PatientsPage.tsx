@@ -13,7 +13,7 @@ export const PatientsPage = () => {
             description={'12 die'} />
           <div className="flex  gap-4  ">
          
-            <ButtonPage className="pl-[12px] pr-[12px]"
+            <ButtonPage className="pl-[12px] pr-[12px] "
                onClick={handleAside}
               
               icon={<BiPlus className="mr-[8px]" />} >Add patients</ButtonPage>

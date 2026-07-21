@@ -5,6 +5,7 @@
    onClick?: () => void;
    className?: string;
    
+   
   }
 export const ButtonPage: React.FC<Props> = ({
   children,
@@ -15,13 +16,15 @@ export const ButtonPage: React.FC<Props> = ({
   return (
     <button
       className={`
+        
         h-[36px]
         flex
         justify-center
         items-center
         rounded-[8px]
-        bg-[#111827]
-        text-white
+         border border-[#9CA3AF]
+        bg-[#172554]
+        text-[#FFFFFF]
         cursor-pointer
         ${className ?? ""}
       `}

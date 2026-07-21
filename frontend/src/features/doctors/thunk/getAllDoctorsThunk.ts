@@ -1,12 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { userService } from "@/services/userService";
 import { getErrorMessage } from "@/features/errors/getError";
+import { doctorsService } from "@/services/doctorService";
+import type { DoctorQuery } from "../model/DoctorQuery";
 
 export const getAllDoctorsThunk = createAsyncThunk(
   "doctors",
-  async (query, thunkApi) => {
+  async (query:DoctorQuery, thunkApi) => {
     try {
-    return  await userService.getAllDoctors(query);
+    return  await doctorsService.getAllDoctors(query);
     } catch (e) {
       return thunkApi.rejectWithValue(getErrorMessage(e));
     }

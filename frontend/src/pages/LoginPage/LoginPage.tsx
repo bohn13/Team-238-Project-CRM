@@ -25,7 +25,7 @@ if (isAuth) {
       </div>
       <div className="flex flex-col justify-center items-center w-1/2 bg-white">
       {loading ? <Loader /> : <LoginForm />} 
-      <Toaster  position="top-right"
+      <Toaster  position="bottom-right"
   reverseOrder={false}/>
       </div>
   </div>

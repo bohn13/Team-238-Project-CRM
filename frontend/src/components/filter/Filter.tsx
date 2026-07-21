@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Input } from "../input/Input";
 import { useDebounce } from "@/hooks/useDebounce"
+import type { SelectOption } from "@/features/doctors/model/specialties";
+import type { DoctorQuery } from "@/features/doctors/model/DoctorQuery";
 type Props = {
    className?: string;
   search: string;
-  specialization: string;
-  employmentType: string;
+  specialization: DoctorQuery['specialization'];
+  employmentType: DoctorQuery['employmentType'];
 
-  specializations: string[];
+  specializations: SelectOption[];
 
   onSearchChange: (value: string) => void;
   onSpecializationChange: (value: string) => void;

@@ -24,7 +24,7 @@ export const DoctorEditForm: React.FC<Props> = ({ handleAside }) => {
   const { selectedDoctor, loading } = useAppSelector((state) => state.doctor);
   const { doctorId } = useParams();
 
-  console.log(selectedDoctor);
+  
   useEffect(() => {
     if (!selectedDoctor) return;
 
@@ -71,14 +71,14 @@ export const DoctorEditForm: React.FC<Props> = ({ handleAside }) => {
               className="flex flex-col gap-6"
               onSubmit={handleSubmit(onSubmit)}
             >
-              <DoctorFormFields />
+              <DoctorFormFields/>
 
-              <div className="flex w-full gap-4 border-t border-[#D1D5DB]">
-                <ButtonPage className="flex-1" onClick={handleAside}>
-                  Cancel
+              <div className="flex w-full gap-4  border-t border-[#D1D5DB]">
+                <ButtonPage className="flex-1  bg-[#FFFFFF] " onClick={handleAside}>
+                 <span className=" text-[#172554]">Cancel</span>
                 </ButtonPage>
 
-                <ButtonPage type="submit" className="flex-1">
+                <ButtonPage type="submit" className="flex-1 ">
                   Send an invitation
                 </ButtonPage>
               </div>

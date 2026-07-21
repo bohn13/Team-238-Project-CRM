@@ -1,12 +1,13 @@
 import { getErrorMessage } from "@/features/errors/getError";
-import { userService } from "@/services/userService";
+import { doctorsService } from "@/services/doctorService";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export const removeDoctorThunk = createAsyncThunk(
   "doctors/delete",
-  async ({ id }: { id: string }, thunkApi) => {
+  async (id:number , thunkApi) => {
     try {
-      await userService.deleteDoctor(id);
+      
+      await doctorsService.deleteDoctor(id);
       return id;
     } catch (e) {
       return thunkApi.rejectWithValue(getErrorMessage(e));

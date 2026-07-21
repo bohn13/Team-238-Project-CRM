@@ -12,7 +12,6 @@ import { Th } from "@/components/table/Th";
 import { UserContacts } from "@/components/userContacts/UserContacts";
 import { DoctorCreteForm } from "@/features/doctors/DoctorCreateForm";
 import { setQuery } from "@/features/doctors/doctorsSlice";
-
 import { specializations } from "@/features/doctors/model/specialties";
 import { getAllDoctorsThunk } from "@/features/doctors/thunk/getAllDoctorsThunk";
 import { useEffect, useState } from "react";
@@ -59,7 +58,7 @@ export const DoctorsPage = () => {
         />
         <div className="flex  gap-4  ">
           <ButtonPage
-            className="pl-[12px] pr-[12px]"
+            className="pl-[12px] pr-[12px] "
             onClick={handleAside}
             icon={<BiPlus className="mr-[8px]" />}
           >
@@ -143,13 +142,15 @@ export const DoctorsPage = () => {
                   <Td>{doctor.employmentType}</Td>
                 </tr>
               ))}
-              {doctors.length === 0 && (
-                <div className="p-3 text-center text-gray-500">
+             
+              </tbody>
+              
+            </Table>
+             {doctors.length === 0 && (
+                <p className="p-3 text-center text-gray-500">
                   Nothing found
-                </div>
+                </p>
               )}
-            </tbody>
-          </Table>
         </div>
       )}
 

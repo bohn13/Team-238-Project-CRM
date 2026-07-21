@@ -19,5 +19,7 @@ authClient.interceptors.request.use((config) => {
 });
 
 authClient.interceptors.response.use((response) => {
-  return humps.camelizeKeys(response.data);
+  response.data = humps.camelizeKeys(response.data);
+
+  return response;
 });

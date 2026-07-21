@@ -11,8 +11,11 @@ import { formValidation } from "@/features/auth/model/form.validation";
 import { specializations } from "@/features/doctors/model/specialties";
 import { employmentTypes } from "@/features/doctors/model/employmentTypes";
 import { workingDays } from "@/features/doctors/model/workingDays";
+type Props = {
+  type?: 'create'
+}
 
-export const DoctorFormFields = () => {
+export const DoctorFormFields:React.FC<Props> = ({type}) => {
   const {
     register,
     formState: { errors },
@@ -27,27 +30,27 @@ export const DoctorFormFields = () => {
 
         <div className="flex gap-4 mb-6">
           <Input
-            disabled
             className="flex-1"
             name="firstName"
             label="First name *"
             type="text"
-            placeholder="Enter first name"
+            placeholder="First, select a user."
             register={register}
             rules={formValidation.name}
             error={errors.firstName?.message}
+            readOnly={type === "create"}
           />
 
           <Input
-            disabled
             className="flex-1"
             name="lastName"
             label="Last name *"
             type="text"
-            placeholder="Enter last name"
+            placeholder="First, select a user."
             register={register}
             rules={formValidation.name}
             error={errors.lastName?.message}
+            readOnly={type === "create"}
           />
         </div>
 

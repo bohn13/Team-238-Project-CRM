@@ -15,9 +15,7 @@ export const AsideMenu: React.FC<Props> = ({ forms, handleAside, title, descript
       
       <div className="fixed  inset-0 bg-black/50" />
 
-      <Toaster 
-       position="bottom-right"
-  reverseOrder={false}/>
+     
      
       <aside
         className="

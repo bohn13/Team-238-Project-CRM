@@ -17,9 +17,12 @@ type InputProps<T extends FieldValues> =
     rules?: RegisterOptions<T>;
     error?: string;
     inputClassName?: string;
+    clasName?: string;
+    readOnly?: boolean;
   };
 
 export function Input<T extends FieldValues>({
+  readOnly,
   label,
   register,
   rules,
@@ -48,6 +51,7 @@ export function Input<T extends FieldValues>({
 
       <div className="relative">
         <input
+          readOnly={readOnly}
           id={name}
           type={
             showPassword && type === "password"

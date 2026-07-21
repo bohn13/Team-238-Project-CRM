@@ -3,6 +3,7 @@ import humps from "humps";
 
 import { accessTokenService } from "@/services/accessTokenService";
 import { authService } from "@/services/authService";
+import { refreshTokenService } from "@/services/refreshTokenService";
 
 export const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -31,7 +32,9 @@ httpClient.interceptors.request.use((config) => {
 
 httpClient.interceptors.response.use(
   (response) => {
-    return humps.camelizeKeys(response.data);
+    response.data = humps.camelizeKeys(response.data);
+
+    return response;
   },
 
   async (error: AxiosError) => {
@@ -41,10 +44,16 @@ httpClient.interceptors.response.use(
 
     const originalRequest = error.config!;
 
-    const { accessToken } = await authService.refresh();
+   const refreshToken = refreshTokenService.get();
 
-    accessTokenService.save(accessToken);
+if (!refreshToken) {
+  throw error;
+}
 
-    return httpClient.request(originalRequest);
+const { accessToken } = await authService.refresh(refreshToken);
+
+accessTokenService.save(accessToken);
+
+return httpClient.request(originalRequest);
   }
 );

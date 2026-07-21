@@ -3,7 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { getErrorMessage } from "../errors/getError";
 import type { User } from "@/types/User";
 
-export const searchUsersThunk = createAsyncThunk<User[]>(
+export const searchUsersThunk = createAsyncThunk<User[],string | undefined>(
   "accounts/users",
   async (search, thunkAPI) => {
     try {

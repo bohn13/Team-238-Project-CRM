@@ -110,11 +110,14 @@ const doctorSlice = createSlice({
       })
       .addCase(updateDoctorThunk.fulfilled, (state, action) => {
         state.loading = false;
-        console.log(action.payload);
+        
         state.selectedDoctor = action.payload;
       })
       .addCase(updateDoctorThunk.rejected, (state) => {
         state.loading = false;
+      })
+      .addCase(removeDoctorThunk.pending, state => {
+        state.loading = true;
       })
     .addCase(removeDoctorThunk.fulfilled, (state, action) => {
        state.loading = false;
@@ -126,7 +129,10 @@ const doctorSlice = createSlice({
   if (state.selectedDoctor?.id === action.payload) {
       state.selectedDoctor = null;
   }
-});
+    })
+      .addCase(removeDoctorThunk.rejected, state => {
+        state.loading = false;
+      });
   },
 });
 
