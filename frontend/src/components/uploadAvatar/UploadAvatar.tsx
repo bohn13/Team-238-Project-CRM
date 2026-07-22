@@ -65,7 +65,7 @@ export const UploadAvatar = () => {
       {preview && (
         <ButtonPage
           type="button"
-          className="ml-3 h-[24px] w-[24px] rounded-full"
+          className="ml-3 h-[24px] w-[24px] rounded-full bg-"
           onClick={() => {
             setValue("avatar", undefined, {
               shouldDirty: true,

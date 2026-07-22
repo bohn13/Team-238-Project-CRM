@@ -12,7 +12,7 @@ export const formValidation = {
     pattern: {
       value:
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_\-\\[\]\\/]).{8,}$/,
-      message: "the password is wrong",
+      message: "The password must consist of at least 8 characters and contain letters, numbers, and special characters.",
     },
   },
   phone: {
