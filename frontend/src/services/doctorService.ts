@@ -38,7 +38,7 @@ export const doctorsService = {
      data:FormData
     ) => {
       const response = await httpClient.post(
-        "doctors/profile",
+        "doctors/profile/",
         data,
         {
           headers: {
@@ -53,7 +53,7 @@ export const doctorsService = {
   data:FormData,id:string
 ) => {
   const response = await httpClient.patch(
-    `doctors/${id}/profile`,
+    `doctors/${id}/profile/`,
     data,
     {
       headers: {

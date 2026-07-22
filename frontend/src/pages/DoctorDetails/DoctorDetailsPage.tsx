@@ -12,10 +12,12 @@ import { getDoctorByIdThunk } from "@/features/doctors/thunk/getDoctorByIdThunk"
 import { removeDoctorThunk } from "@/features/doctors/thunk/removeDoctorThunk";
 import { errorToast, successToast } from "@/components/pushAppMessage/PushApp";
 import { Loader } from "@/components/loader/Loader";
+import { ConfirmModal } from "@/components/confirmModal/ConfirmModal";
 
 export const DoctorDetailsPage = () => {
   const dispatch = useAppDispatch();
   const [aside, setOpenAside] = useState(false);
+  const [modal, setOpenModal] = useState(false)
 
   const { doctorId } = useParams();
   const navigate = useNavigate();
@@ -36,9 +38,12 @@ export const DoctorDetailsPage = () => {
     try {
       await dispatch(removeDoctorThunk(Number(doctorId))).unwrap();
       successToast('Doctor remove')
+      setOpenModal(false)
       navigate("/doctors");
+
     } catch (e) {
       errorToast(e as string)
+      setOpenModal(false)
     }
     
   }
@@ -53,6 +58,16 @@ export const DoctorDetailsPage = () => {
           description={"Fill in the details below"}
         />
       )}
+     
+      <ConfirmModal
+        loading={loading}
+    isOpen={modal}
+    title="Delete doctor?"
+    description="This action cannot be undone."
+    confirmText="Delete"
+    onCancel={() => setOpenModal(false)}
+    onConfirm={handleRemove}
+/>
 
       {loading? <Loader/>: <div className="rounded-xl bg-white p-6 shadow-sm">
         <section className="mb-8 flex items-center justify-between">
@@ -73,7 +88,7 @@ export const DoctorDetailsPage = () => {
             
               className="bg-[#EF4444] px-4 hover:bg-black"
               icon={<IoTrash className="mr-2 text-white" />}
-              onClick={ handleRemove}
+              onClick={ ()=>setOpenModal(true)}
             >
               Remove doctor
             </ButtonPage>
