@@ -28,11 +28,11 @@ export const formValidation = {
       value: /^[A-Za-zА-Яа-яІіЇїЄєҐґ]+(?:['’-][A-Za-zА-Яа-яІіЇїЄєҐґ]+)*$/,
       message: "Name can contain only letters, hyphens, and apostrophes",
     },
-     },
-   specialization: {
+  },
+  specialization: {
     required: "Specialization is required",
   },
-    experience: {
+  experience: {
     required: "Experience is required",
     min: {
       value: 0,
@@ -44,12 +44,80 @@ export const formValidation = {
     },
     valueAsNumber: true,
   },
-workingDays: {
-  validate: (value) =>
-    value.length > 0 || "Select at least one working day",
-},
+  workingDays: {
+    validate: (value) =>
+      value.length > 0 || "Select at least one working day",
+  },
 
   partTime: {
     required: "Please select employment type",
   },
+  gender: {
+    required: "Please select a gender"
+  },
+
+birthDate: {
+  required: "Date of birth is required",
+  validate: {
+    notInFuture: (value: string | number) => {
+      const birth = new Date(String(value));
+
+      return (
+        birth <= new Date() ||
+        "Date of birth cannot be in the future"
+      );
+    },
+
+    validAge: (value: string | number) => {
+      const birth = new Date(String(value));
+      const today = new Date();
+
+      let age = today.getFullYear() - birth.getFullYear();
+
+      const monthDiff = today.getMonth() - birth.getMonth();
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+      ) {
+        age--;
+      }
+
+      return age >= 6 || "Patient must be at least 6 years old";
+    },
+
+    maxAge: (value: string | number) => {
+      const birth = new Date(String(value));
+      const today = new Date();
+
+      let age = today.getFullYear() - birth.getFullYear();
+
+      const monthDiff = today.getMonth() - birth.getMonth();
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+      ) {
+        age--;
+      }
+
+      return age <= 120 || "Invalid date of birth";
+    },
+  },
+  },
+address: {
+  required: "Address is required",
+  minLength: {
+    value: 5,
+    message: "Address must be at least 5 characters",
+  },
+  maxLength: {
+    value: 255,
+    message: "Address cannot exceed 255 characters",
+  },
+  pattern: {
+    value: /^[A-Za-zА-Яа-яІіЇїЄєҐґ0-9\s.,'’"\/\-№]+$/,
+    message: "Address contains invalid characters",
+  },
+},
 }
