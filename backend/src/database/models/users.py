@@ -101,10 +101,16 @@ class UserModel(Base):
         return verify_password(raw_password, self._password_hash)
 
     @validates("email")
-    def validate_email(self, key: str, value: str | None) -> str | None:
+    def validate_email(self, _key: str, value: str | None) -> str | None:
         if value is None:
             return value
         return validators.validate_email(value.lower())
+
+    @validates("phone_number")
+    def validate_phone_number(self, _key: str, value: str | None) -> str | None:
+        if value is None:
+            return value
+        return validators.normalize_phone_number(value)
 
 
 class TokenBaseModel(Base):

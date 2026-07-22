@@ -3,6 +3,9 @@ import re
 import email_validator
 
 
+PHONE_NUMBER_PATTERN = r"^\+[1-9]\d{7,14}$"
+
+
 def validate_password_strength(password: str) -> str:
     if len(password) < 8:
         raise ValueError("Password must contain at least 8 characters.")
@@ -27,3 +30,13 @@ def validate_email(user_email: str) -> str:
     except email_validator.EmailNotValidError as error:
         raise ValueError(str(error)) from error
     return email_info.normalized
+
+
+def normalize_phone_number(phone_number: str) -> str:
+    normalized_phone_number = re.sub(r"[\s()-]", "", phone_number)
+    if not re.fullmatch(PHONE_NUMBER_PATTERN, normalized_phone_number):
+        raise ValueError(
+            "Phone number must be in international E.164 format, "
+            "for example +380501112233."
+        )
+    return normalized_phone_number

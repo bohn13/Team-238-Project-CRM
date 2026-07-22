@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -18,7 +20,12 @@ from schemas import (
     DoctorResponseSchema,
     MessageResponseSchema,
 )
-from schemas.doctors import DoctorSortBy, SortOrder
+from schemas.doctors import (
+    DoctorProfileCreateRequestSchema,
+    DoctorProfileUpdateRequestSchema,
+    DoctorSortBy,
+    SortOrder,
+)
 from security.auth import CurrentUserDep
 from security.permissions import AdminDep, DoctorAdminOrSuperAdminDep
 from services.doctors import DoctorService
@@ -83,22 +90,22 @@ async def list_doctors(
 )
 async def create_doctor_profile(
     _: AdminDep,
-    user_id: int = Form(..., ge=1),
-    specialization: str = Form(..., min_length=1, max_length=100),
-    years_experience: int | None = Form(default=None, ge=0, le=80),
-    employment_type: DoctorEmploymentTypeEnum | None = Form(default=None),
-    avatar: UploadFile | None = File(default=None),
+    data: Annotated[
+        DoctorProfileCreateRequestSchema,
+        Form(media_type="multipart/form-data"),
+    ],
     doctor_service: DoctorService = DoctorServiceDep,
     storage: S3StorageInterface = Depends(get_s3_storage_client),
 ) -> DoctorResponseSchema:
     try:
         doctor = await doctor_service.create_profile(
-            user_id=user_id,
-            specialization=specialization,
-            years_experience=years_experience,
-            employment_type=employment_type,
-            avatar_file_data=await avatar.read() if avatar else None,
-            avatar_content_type=avatar.content_type if avatar else None,
+            user_id=data.user_id,
+            specialization=data.specialization,
+            years_experience=data.years_experience,
+            employment_type=data.employment_type,
+            phone_number=data.phone_number,
+            avatar_file_data=await data.avatar.read() if data.avatar else None,
+            avatar_content_type=data.avatar.content_type if data.avatar else None,
             storage=storage,
         )
     except UserNotFoundError as error:
@@ -150,33 +157,22 @@ async def get_doctor_profile(
 async def update_doctor_profile(
     id: int,
     current_user: CurrentUserDep,
-    first_name: str | None = Form(default=None, min_length=1, max_length=50),
-    last_name: str | None = Form(default=None, min_length=1, max_length=50),
-    phone_number: str | None = Form(default=None, max_length=20),
-    specialization: str | None = Form(default=None, min_length=1, max_length=100),
-    years_experience: int | None = Form(default=None, ge=0, le=80),
-    employment_type: DoctorEmploymentTypeEnum | None = Form(default=None),
-    avatar: UploadFile | None = File(default=None),
+    data: Annotated[
+        DoctorProfileUpdateRequestSchema,
+        Form(media_type="multipart/form-data"),
+    ],
     doctor_service: DoctorService = DoctorServiceDep,
     storage: S3StorageInterface = Depends(get_s3_storage_client),
 ) -> DoctorResponseSchema:
-    params = {
-        "first_name": first_name,
-        "last_name": last_name,
-        "phone_number": phone_number,
-        "specialization": specialization,
-        "years_experience": years_experience,
-        "employment_type": employment_type,
-    }
-    data = {key: value for key, value in params.items() if value is not None}
+    update_data = data.model_dump(exclude={"avatar"}, exclude_none=True)
     try:
         doctor = await doctor_service.update_profile(
             current_user=current_user,
             doctor_id=id,
-            data=data,
+            data=update_data,
             storage=storage,
-            avatar_file_data=await avatar.read() if avatar else None,
-            avatar_content_type=avatar.content_type if avatar else None,
+            avatar_file_data=await data.avatar.read() if data.avatar else None,
+            avatar_content_type=data.avatar.content_type if data.avatar else None,
         )
     except DoctorServiceError as error:
         raise map_doctor_error(error) from error

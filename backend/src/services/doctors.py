@@ -38,6 +38,7 @@ class DoctorService:
         specialization: str,
         years_experience: int | None = None,
         employment_type: DoctorEmploymentTypeEnum | None = None,
+        phone_number: str | None = None,
         avatar_file_data: bytes | None = None,
         avatar_content_type: str | None = None,
         storage: S3StorageInterface | None = None,
@@ -61,6 +62,10 @@ class DoctorService:
 
         try:
             user.role = UserRoleEnum.DOCTOR
+
+            if phone_number is not None:
+                user.phone_number = phone_number
+
             self.doctors.add(doctor)
             await self.session.flush()
             if avatar_file_data is not None:

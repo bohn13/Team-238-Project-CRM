@@ -41,8 +41,23 @@ class UserRegistrationRequestSchema(BaseEmailPasswordSchema):
 
     first_name: str = Field(..., min_length=1, max_length=50)
     last_name: str = Field(..., min_length=1, max_length=50)
-    phone_number: str | None = Field(default=None, max_length=20)
+    phone_number: str | None = Field(
+        default=None,
+        pattern=users_validators.PHONE_NUMBER_PATTERN,
+        description=(
+            "Phone number in international E.164 format. Spaces, parentheses, "
+            "and hyphens are removed before validation."
+        ),
+        examples=["+380501112233"],
+    )
     source: str | None = Field(default="website", max_length=30)
+
+    @field_validator("phone_number", mode="before")
+    @classmethod
+    def normalize_phone_number(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+        return users_validators.normalize_phone_number(value)
 
 
 class UserRegistrationResponseSchema(BaseModel):
