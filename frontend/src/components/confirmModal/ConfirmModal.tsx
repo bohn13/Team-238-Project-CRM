@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { ButtonPage } from "../button/ButtonsPage";
+import { Loader } from "../loader/Loader";
 
 
 type Props = {
@@ -99,9 +100,9 @@ export const ConfirmModal: React.FC<Props> = ({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className={  'w-[171px] bg-[#EF4444]' }
+            className={'w-[171px] bg-[#EF4444]' }
           >
-            { confirmText}
+            {loading ? <Loader/>: confirmText}
           </ButtonPage>
         </div>
       </div>

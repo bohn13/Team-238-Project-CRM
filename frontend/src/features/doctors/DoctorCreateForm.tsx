@@ -33,6 +33,7 @@ export const DoctorCreteForm: React.FC<Props> = ({ handleAside }) => {
     setValue("firstName", selectedUser.firstName);
     setValue("lastName", selectedUser.lastName);
     setValue("email", selectedUser.email);
+     
   }, [selectedUser, setValue]);
 
  const onSubmit = async (data: DoctorFormData) => {

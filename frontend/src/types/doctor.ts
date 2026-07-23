@@ -5,7 +5,7 @@ export type Doctor = {
   "firstName": string,
    "lastName": string,
   "email": string,
-   "phoneNumber": null,
+   "phoneNumber": number,
    "specialization": string,
    "yearsExperience": number,
   "employmentType": string,

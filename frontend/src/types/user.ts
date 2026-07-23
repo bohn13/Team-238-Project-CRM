@@ -4,7 +4,7 @@ export type User = {
   lastName: string;
   email: string;
   role?: 'admin' | 'user' | 'doctor' |'superadmin'
-  phoneNumber?: string,
+  phoneNumber: number,
   registrationDate?: Date,
   source?: string,
   

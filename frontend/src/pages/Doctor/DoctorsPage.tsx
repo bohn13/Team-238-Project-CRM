@@ -102,7 +102,7 @@ export const DoctorsPage = () => {
       {loading ? (
         <Loader />
       ) : (
-        <div className="w-full p-[24p]">
+        <div className="w-full h-full p-[24px]">
           <Table>
             <thead>
               <tr>

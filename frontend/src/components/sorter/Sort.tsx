@@ -2,7 +2,8 @@ import { RiArrowUpDownLine } from "react-icons/ri";
 type SortBy =
   | "name"
   | "specialization"
-  | "years_experience";
+  | "years_experience"
+  | "created_at";
 
 type SortOrder = "asc" | "desc";
 
@@ -30,7 +31,7 @@ const buttons: {
     label: "Specialization",
   },
   {
-    value: "years_experience",
+    value: "yearsExperience",
     label: "Experience",
   },
 ];
