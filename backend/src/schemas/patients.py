@@ -1,5 +1,6 @@
 import enum
 from datetime import date, datetime
+
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
@@ -28,6 +29,7 @@ class PatientBase(BaseModel):
     def validate_date_of_birth(cls, value: date | None) -> date | None:
         if value is not None and value > date.today():
             raise ValueError("Date of birth cannot be in the future.")
+
         return value
 
 
@@ -36,7 +38,10 @@ class PatientCreate(PatientBase):
 
 
 class PatientUpdate(PatientBase):
-    pass
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    phone_number: str | None = None
 
 
 class PatientResponse(PatientBase):
@@ -44,6 +49,10 @@ class PatientResponse(PatientBase):
 
     id: int
     user_id: int
+    first_name: str
+    last_name: str
+    email: str
+    phone_number: str | None = None
 
 
 class PatientListResponse(BaseModel):
@@ -57,3 +66,11 @@ class PatientListResponse(BaseModel):
     date_of_birth: date | None
     source: PatientSourceEnum | None = None
     last_visit_date: datetime | None = None
+
+
+class PaginatedPatientResponse(BaseModel):
+    items: list[PatientListResponse]
+    total: int
+    page: int
+    page_size: int
+    pages: int

@@ -10,6 +10,14 @@ from database.models.appointments import (
 from schemas.appointments import AppointmentCreate, AppointmentUpdate
 
 
+ACTIVE_APPOINTMENT_STATUSES = (
+    AppointmentStatusEnum.SCHEDULED,
+    AppointmentStatusEnum.CONFIRMED,
+    AppointmentStatusEnum.WAITING,
+    AppointmentStatusEnum.ONGOING,
+)
+
+
 class AppointmentRepository:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -30,7 +38,7 @@ class AppointmentRepository:
 
         query = select(AppointmentModel.id).where(
             AppointmentModel.doctor_id == doctor_id,
-            AppointmentModel.status != AppointmentStatusEnum.CANCELLED,
+            AppointmentModel.status.in_(ACTIVE_APPOINTMENT_STATUSES),
             AppointmentModel.date_time < new_appointment_end,
             existing_appointment_end > date_time,
         )
