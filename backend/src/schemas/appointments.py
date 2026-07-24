@@ -37,3 +37,7 @@ class AppointmentResponse(AppointmentBase):
 
     id: int
     created_at: datetime
+
+
+class AppointmentStatusUpdate(BaseModel):
+    status: AppointmentStatusEnum

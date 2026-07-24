@@ -12,8 +12,11 @@ from database.models.base import Base
 class AppointmentStatusEnum(str, enum.Enum):
     SCHEDULED = "scheduled"
     CONFIRMED = "confirmed"
+    WAITING = "waiting"
+    ONGOING = "ongoing"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    NO_SHOW = "no_show"
 
 
 class AppointmentChannelEnum(str, enum.Enum):

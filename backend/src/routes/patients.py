@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.session_postgresql import get_postgresql_db
 from exceptions import DatabaseWriteError
 from schemas.patients import (
+    PaginatedPatientResponse,
     PatientCreate,
-    PatientListResponse,
     PatientResponse,
     PatientUpdate,
 )
@@ -44,15 +44,24 @@ async def create_patient(
 
 @router.get(
     "/",
-    response_model=list[PatientListResponse],
+    response_model=PaginatedPatientResponse,
 )
 async def get_patients(
     current_user: DoctorAdminOrSuperAdminDep,
+    category: str = Query("all"),
+    search: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_postgresql_db),
-) -> list[PatientListResponse]:
+) -> PaginatedPatientResponse:
     service = PatientService(db)
 
-    return await service.get_all()
+    return await service.get_all(
+        category=category,
+        search=search,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get(

@@ -1,8 +1,10 @@
+from math import ceil
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.patient import PatientModel
-from database.models.users import UserModel, UserRoleEnum
+from database.models.users import UserRoleEnum
 from exceptions import DatabaseWriteError
 from repositories.patients import PatientRepository
 from repositories.users import UserRepository
@@ -54,14 +56,42 @@ class PatientService:
 
         return created_patient
 
-    async def get_all(self) -> list[dict]:
-        return await self.patients.get_all()
+    async def get_all(
+        self,
+        category: str = "all",
+        search: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        offset = (page - 1) * page_size
+
+        total = await self.patients.count(
+            category=category,
+            search=search,
+        )
+
+        items = await self.patients.get_all(
+            category=category,
+            search=search,
+            offset=offset,
+            limit=page_size,
+        )
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "pages": ceil(total / page_size) if total else 0,
+        }
 
     async def get_by_id(
-        self,
-        patient_id: int,
-    ) -> PatientModel:
-        patient = await self.patients.get_by_id(patient_id)
+            self,
+            patient_id: int,
+    ) -> dict:
+        patient = await self.patients.get_details_by_id(
+            patient_id,
+        )
 
         if patient is None:
             raise ValueError("Patient profile not found.")
@@ -93,24 +123,3 @@ class PatientService:
             ) from error
 
         return patient
-
-    async def delete_profile(
-        self,
-        patient_id: int,
-    ) -> None:
-        patient = await self.patients.get_by_id(patient_id)
-
-        if patient is None:
-            raise ValueError("Patient profile not found.")
-
-        user: UserModel = await self.users.get_by_id(patient.user_id)
-
-        try:
-            user.role = UserRoleEnum.USER
-            await self.patients.delete(patient)
-            await self.session.commit()
-        except SQLAlchemyError as error:
-            await self.session.rollback()
-            raise DatabaseWriteError(
-                "An error occurred while deleting patient profile."
-            ) from error
